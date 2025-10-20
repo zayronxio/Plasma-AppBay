@@ -87,7 +87,7 @@ FocusScope {
                             opacity: 1.0
 
                             property int sizeIcon: 96
-
+                            property int sizeIconDefalt: 96
                             property bool drogActive: false
 
                             Kirigami.Icon {
@@ -98,6 +98,13 @@ FocusScope {
                                 anchors.horizontalCenter: parent.horizontalCenter
                             }
 
+                            Behavior on sizeIcon {
+                                NumberAnimation {
+                                    duration: 200
+                                    easing.type: Easing.InOutQuad
+                                }
+                            }
+
                             Text {
                                 anchors.top: icon.bottom
                                 anchors.horizontalCenter: parent.horizontalCenter
@@ -106,8 +113,16 @@ FocusScope {
                                 elide: Text.ElideRight
                                 horizontalAlignment: Text.AlignHCenter
                                 font.pixelSize: 12
-                                visible: !drogActive
+                                opacity: drogActive ? 0 : 1
+                                visible: opacity > 0
+                                Behavior on opacity {
+                                    NumberAnimation {
+                                        duration: 200
+                                        easing.type: Easing.InOutQuad
+                                    }
+                                }
                             }
+
 
                             MouseArea {
                                 anchors.fill: parent
