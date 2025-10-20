@@ -10,6 +10,8 @@ FocusScope {
     property int itemsPerPage: 18
     property int currentPage: 0
 
+    property bool isDragging: true
+
     readonly property int totalPages: Math.ceil(mo.count / itemsPerPage)
 
     signal openGridApp(int ID)
@@ -44,7 +46,7 @@ FocusScope {
             width: parent.width
             height: parent.height - (pageIndicator.visible ? pageIndicator.height + 10 : 0)
             currentIndex: currentPage
-            interactive: totalPages > 1
+            interactive: isDragging
 
             // NO debe tener foco ni manejar teclas
             focus: false
@@ -82,9 +84,15 @@ FocusScope {
                             width: grid.cellWidth
                             height: width
 
+                            opacity: 1.0
+
+                            property int sizeIcon: 96
+
+                            property bool drogActive: false
+
                             Kirigami.Icon {
                                 id: icon
-                                width: 96
+                                width: sizeIcon
                                 height: width
                                 source: modelData.icon
                                 anchors.horizontalCenter: parent.horizontalCenter
@@ -98,10 +106,45 @@ FocusScope {
                                 elide: Text.ElideRight
                                 horizontalAlignment: Text.AlignHCenter
                                 font.pixelSize: 12
+                                visible: !drogActive
                             }
 
                             MouseArea {
                                 anchors.fill: parent
+                                //drag.target: parent
+
+                                property bool changeGrup: false
+
+                                QtObject {
+                                    id: origin
+                                    property int x
+                                    property int y
+                                }
+                                onPressAndHold: {
+                                    if(pressed) {
+                                        drag.target = parent
+                                        parent.z = 9999
+                                        parent.opacity = 0.9
+                                        parent.sizeIcon = sizeIcon + 16
+                                        parent.drogActive = true
+                                        isDragging = false
+                                    }
+                                }
+                                onPressed: {
+                                    origin.x = parent.x
+                                    origin.y = parent.y
+                                }
+                                onReleased: {
+                                    if(!changeGrup) {
+                                        parent.x = origin.x
+                                        parent.y = origin.y
+                                    }
+                                    isDragging = true
+                                    drag.target = null
+                                    parent.opacity = 1.9
+                                    parent.sizeIcon = sizeIcon - 16
+                                    parent.drogActive = false
+                                }
                                 onClicked: {
                                     openGridApp(modelData.appIndex)
                                 }
