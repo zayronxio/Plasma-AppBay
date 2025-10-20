@@ -90,6 +90,9 @@ FocusScope {
                             property int sizeIconDefalt: 96
                             property bool drogActive: false
 
+                            Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
+                            Behavior on y { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
+
                             Kirigami.Icon {
                                 id: icon
                                 width: sizeIcon
