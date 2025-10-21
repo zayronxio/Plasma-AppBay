@@ -3,14 +3,13 @@ import org.kde.plasma.core as PlasmaCore
 import org.kde.kwindowsystem 1.0
 import org.kde.plasma.private.kicker 0.1 as Kicker
 
-Kicker.DashboardWindow  {
+Kicker.DashboardWindow {
     id: dashboard
 
     visualParent: root
 
     backgroundColor: "transparent"
     flags: Qt.Window | Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
-
 
     Rectangle {
         id: background
@@ -34,7 +33,7 @@ Kicker.DashboardWindow  {
                 if (dashboard.visible) {
                     background.opacity = 1.0
                     Qt.callLater(function() {
-                        appList.forceActiveFocus()
+                        searchEntry.forceActiveFocus()
                     })
                 } else {
                     background.opacity = 0.0
@@ -42,11 +41,33 @@ Kicker.DashboardWindow  {
             }
         }
 
-        // contenido
+        // SearchEntry en posición fija arriba
+        SearchEntry {
+            id: searchEntry
+            //focus: true
+            anchors {
+                top: parent.top
+                horizontalCenter: parent.horizontalCenter
+                topMargin: 30
+            }
+            width: Math.min(parent.width - 60, 400) // Ancho máximo
+        }
+
+        // AppList ocupando el resto del espacio
         AppList {
             id: appList
-            anchors.fill: parent
-            focus: true
+            height: parent.height*.7
+            width:  parent.width*.8
+            anchors {
+                top: searchEntry.bottom
+                bottom: parent.bottom
+                left: parent.left
+                right: parent.right
+                topMargin: 20
+            }
+            //focus: true
+            visible: true
+
             onOpenGridApp: function (ID) {
                 console.log("abriendo app:", ID)
                 var applicationsModel = rootModel.modelForRow(0)

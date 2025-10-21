@@ -10,13 +10,38 @@ PlasmoidItem {
   Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground | PlasmaCore.Types.ConfigurableBackground
   preferredRepresentation: compactRepresentation
 
+  property bool searchActive: false
+
   ListModel {
     id: appsModel
   }
 
-  Keys.onPressed: (event)=> {
+  Keys.onPressed: (event) => {
     if (event.key === Qt.Key_Escape) {
+      Module.ToggleActive.delateFullText()
+      searchActive = false
       Module.ToggleActive.handleVisible()
+      event.accepted = true
+    }
+    else if (event.key === Qt.Key_Backspace) {
+      if (searchActive) {
+        Module.ToggleActive.backspace()
+        event.accepted = true
+      }
+    }
+    else if (event.key === Qt.Key_Delete) {
+      if (searchActive) {
+        Module.ToggleActive.deleteKey()
+        event.accepted = true
+      }
+    }
+    else if (event.text !== "" && !event.ctrl && !event.alt && !event.meta) {
+      event.accepted = true;
+      searchActive = true
+      Module.ToggleActive.newTextSearch(event.text)
+    }
+    else {
+      event.accepted = false
     }
   }
 
