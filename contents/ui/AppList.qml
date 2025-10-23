@@ -1,191 +1,89 @@
 import QtQuick
 import QtQuick.Controls 2.15
-import org.kde.kirigami as Kirigami
 
 FocusScope {
     id: rootScope
 
     property var mo: appsModel
     property var modelExe: rootModel.modelForRow(0)
-    property int itemsPerPage: 18
-    property int currentPage: 0
+    property var searchModel: runnerModel.count > 0 ? runnerModel.modelForRow(0) : null
+    property bool listGeneralActive: listActive === "generalList"
 
-    property bool isDragging: true
-
-    readonly property int totalPages: Math.ceil(mo.count / itemsPerPage)
+    readonly property var modelActive: listGeneralActive ? mo : searchModel
 
     signal openGridApp(int ID)
-    Column {
-        anchors.fill: parent
-        spacing: 10
 
-        // PageIndicator interactivo
-        PageIndicator {
-            id: pageIndicator
-            count: totalPages
-            currentIndex: currentPage
-            visible: totalPages > 1
-            anchors.top: swipeView.bottom
-            anchors.horizontalCenter: parent.horizontalCenter
+    // Configuración de la cuadrícula
+    readonly property int maxItemsPerRow: 5
+    readonly property int maxItemsPerColumn: 3
+    readonly property int cellWidth: 256
+    readonly property int cellHeight: 256
+    readonly property int iconSize: 96
+    readonly property int marginPage: (width - (cellWidth*maxItemsPerRow))/2
+    readonly property int itemsPerPage: maxItemsPerRow * maxItemsPerColumn
 
-            MouseArea {
-                anchors.fill: parent
-                onClicked: {
-                    var itemWidth = parent.width / parent.count
-                    var clickedIndex = Math.floor(mouseX / itemWidth)
-                    if (clickedIndex >= 0 && clickedIndex < parent.count) {
-                        currentPage = clickedIndex
-                        rootScope.forceActiveFocus()
-                    }
+    property int currentPage: 0
+    property int totalPages
+
+    Item {
+        id: gridRoot
+        width: parent.width
+        height:  parent.height
+
+        MouseArea {
+            anchors.fill: parent
+            propagateComposedEvents: true
+            onWheel: {
+                if (wheel.angleDelta.y > 0 && currentPage > 0) {
+                    currentPage--
+                } else if (wheel.angleDelta.y < 0 && currentPage < totalPages - 1) {
+                    currentPage++
                 }
+                wheel.accepted = true
             }
         }
 
-        SwipeView {
-            id: swipeView
-            width: parent.width
-            height: parent.height - (pageIndicator.visible ? pageIndicator.height + 10 : 0)
-            currentIndex: currentPage
-            interactive: isDragging
 
-            // NO debe tener foco ni manejar teclas
-            focus: false
-            Keys.enabled: false
+        Item {
+            id: wrapper
+            width: parent.width
+            height:  parent.height
+            Behavior on x {
+                NumberAnimation { duration: 350; easing.type: Easing.InOutQuad }
+            }
+            x: -currentPage * gridRoot.width
 
             Repeater {
-                model: totalPages
+                model: modelActive
 
-                Item {
-                    focus: false
+                delegate: Item {
+                    width: cellWidth
+                    height: cellHeight
 
-                    GridView {
-                        id: grid
-                        width: parent.width * .7
-                        height: parent.height
-                        cellWidth: width / 6
-                        cellHeight: cellWidth
-                        anchors.centerIn: parent
+                    property int page: Math.floor(index / itemsPerPage)
+                    property int localIndex: index % itemsPerPage
+                    property int row: localIndex % maxItemsPerRow
+                    property int column: Math.floor(localIndex / maxItemsPerRow)
+                    property int extraPadding: page > 0 ? marginPage + (marginPage*page) : marginPage
 
-                        // GridView tampoco debe tener foco ni ser interactivo con teclado
-                        focus: false
-                        interactive: false
+                    x: (row * cellWidth) + (page * (maxItemsPerRow * cellWidth + marginPage)) + extraPadding
+                    y: column * cellHeight
 
-                        model: {
-                            var startIndex = index * itemsPerPage
-                            var endIndex = Math.min(startIndex + itemsPerPage, mo.count)
-                            var pageModel = []
-                            for (var i = startIndex; i < endIndex; i++) {
-                                pageModel.push(mo.get(i))
-                            }
-                            return pageModel
-                        }
+                    ListDelegate {
+                        anchors.fill: parent
+                        iconSource: model.icon || model.decoration
+                        name: model.name || model.display
+                        dragActive: false
+                        sizeIcon: iconSize
+                    }
 
-                        delegate: Item {
-                            width: grid.cellWidth
-                            height: width
-
-                            opacity: 1.0
-
-                            property int sizeIcon: 96
-                            property int sizeIconDefalt: 96
-                            property bool drogActive: false
-
-                            Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
-                            Behavior on y { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
-
-                            Kirigami.Icon {
-                                id: icon
-                                width: sizeIcon
-                                height: width
-                                source: modelData.icon
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
-
-                            Behavior on sizeIcon {
-                                NumberAnimation {
-                                    duration: 200
-                                    easing.type: Easing.InOutQuad
-                                }
-                            }
-
-                            Text {
-                                anchors.top: icon.bottom
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: modelData.name
-                                width: parent.width - 10
-                                elide: Text.ElideRight
-                                horizontalAlignment: Text.AlignHCenter
-                                font.pixelSize: 12
-                                opacity: drogActive ? 0 : 1
-                                visible: opacity > 0
-                                Behavior on opacity {
-                                    NumberAnimation {
-                                        duration: 200
-                                        easing.type: Easing.InOutQuad
-                                    }
-                                }
-                            }
-
-
-                            MouseArea {
-                                anchors.fill: parent
-                                //drag.target: parent
-
-                                property bool changeGrup: false
-
-                                QtObject {
-                                    id: origin
-                                    property int x
-                                    property int y
-                                }
-                                onPressAndHold: {
-                                    if(pressed) {
-                                        drag.target = parent
-                                        parent.z = 9999
-                                        parent.opacity = 0.9
-                                        parent.sizeIcon = sizeIcon + 16
-                                        parent.drogActive = true
-                                        isDragging = false
-                                    }
-                                }
-                                onPressed: {
-                                    origin.x = parent.x
-                                    origin.y = parent.y
-                                }
-                                onReleased: {
-                                    if(!changeGrup) {
-                                        parent.x = origin.x
-                                        parent.y = origin.y
-                                    }
-                                    isDragging = true
-                                    drag.target = null
-                                    parent.opacity = 1.9
-                                    parent.sizeIcon = sizeIcon - 16
-                                    parent.drogActive = false
-                                }
-                                onClicked: {
-                                    openGridApp(modelData.appIndex)
-                                }
-                            }
-                        }
-
+                    Component.onCompleted: {
+                        totalPages = Math.ceil(index/(maxItemsPerRow*maxItemsPerColumn))
                     }
                 }
             }
         }
-    }
 
-    onCurrentPageChanged: {
-        if (swipeView.currentIndex !== currentPage) {
-            swipeView.currentIndex = currentPage
-        }
-    }
-
-    Component.onCompleted: {
-        swipeView.currentIndexChanged.connect(function() {
-            if (currentPage !== swipeView.currentIndex) {
-                currentPage = swipeView.currentIndex
-            }
-        })
     }
 }
+
