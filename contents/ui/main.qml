@@ -11,6 +11,7 @@ PlasmoidItem {
   preferredRepresentation: compactRepresentation
 
   property bool searchActive: false
+  property string listActive: "generalList" // "searchList"
 
   ListModel {
     id: appsModel
@@ -102,6 +103,23 @@ PlasmoidItem {
   }
 
 
+  Kicker.RunnerModel {
+    id: runnerModel
+
+    appletInterface: kicker
+
+    favoritesModel: globalFavorites
+
+    runners: {
+      const results = ["krunner_services",
+      "krunner_systemsettings",
+      "krunner_sessions",
+      "krunner_powerdevil",
+      "calculator",
+      "unitconverter"];
+      return results;
+    }
+  }
 
   compactRepresentation: CompactRepresentation {
   }
