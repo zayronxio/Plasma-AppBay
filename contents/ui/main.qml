@@ -11,6 +11,9 @@ PlasmoidItem {
   preferredRepresentation: compactRepresentation
 
   property bool searchActive: false
+
+  property QtObject globalFavorites: rootModel.favoritesModel
+
   property string listActive: "generalList" // "searchList"
 
   ListModel {
@@ -81,7 +84,7 @@ PlasmoidItem {
 
   //BEGIN Models
   Kicker.RootModel {
-    id: rootModel
+    id: rootModel // si se llama este model unicamente como rootModel se optiene la lista de las categorias, es necesario filtrar por index, por ejemplo rootModel.modelForRow(0) contiene todos las aplicaciones, pues ese es el index de todas las aplicaciones
     autoPopulate: false
 
     appNameFormat: 0
@@ -100,8 +103,12 @@ PlasmoidItem {
       }
 
     }
-  }
 
+    Component.onCompleted: {
+      favoritesModel.initForClient("org.kde.plasma.kicker.favorites.instance-" + Plasmoid.id)
+    }
+
+  }
 
   Kicker.RunnerModel {
     id: runnerModel
