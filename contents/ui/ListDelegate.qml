@@ -7,6 +7,7 @@ Item {
     anchors.fill: parent
     property var iconSource
     property var name
+    property int appIndex
     property bool dragActive: false
     property int sizeIcon
     property int itemIndex: index
@@ -16,12 +17,20 @@ Item {
     property var subModel
 
     // Señal para notificar cuando se suelta sobre otro elemento
-    signal dropOnItem(int draggedIndex, var draggedModel, int targetIndex, var targetModel)
+    signal dropOnItem(
+        int draggedIndex,
+        string draggedName,
+        string draggedIcon,
+        int draggedAppIndex,
+        int targetIndex,
+        string targetName,
+        string targetIcon,
+        int targetAppIndex
+    )
+
     signal openFolder
     signal closeFolder
-
     signal openGroup(var groupModel)
-
 
     // Efecto de aparición
     property real appearScale: 1.0
@@ -44,15 +53,6 @@ Item {
             duration: 180
             easing.type: Easing.OutQuad
         }
-        /*/ efecto rebote desabilitado
-        PropertyAnimation {
-            target: delegateRoot
-            property: "appearScale"
-            from: 1.1
-            to: 1.0
-            duration: 200
-            easing.type: Easing.InOutQuad
-        }/*/
     }
 
     Component.onCompleted: {
@@ -68,6 +68,12 @@ Item {
         x: 0
         y: 0
 
+        // Configuración del sistema Drag - CLAVE: NO usar drag.target en MouseArea
+        Drag.active: mouseArea.pressed && mouseArea.isDragging
+        Drag.source: delegateRoot
+        Drag.hotSpot.x: width / 2
+        Drag.hotSpot.y: height / 2
+
         Rectangle {
             id: bgGroup
             visible: isGroup
@@ -81,21 +87,20 @@ Item {
                 anchors.fill: parent
 
                 Repeater {
-                   anchors.fill: parent
-                   model: subModel
-                   delegate: Item {
-                       width: bgGroup.active ? 256 : sizeIcon/2
-                       height: bgGroup.active ? 256 : sizeIcon/2
-                       Kirigami.Icon {
-                           id: iconGroup
-                           width: bgGroup.active ? sizeIcon : parent.width/2
-                           height: width
-                           source: model.decoration
-                           anchors.centerIn: parent
-                       }
-                   }
+                    anchors.fill: parent
+                    model: subModel
+                    delegate: Item {
+                        width: bgGroup.active ? 256 : sizeIcon/2
+                        height: bgGroup.active ? 256 : sizeIcon/2
+                        Kirigami.Icon {
+                            id: iconGroup
+                            width: bgGroup.active ? sizeIcon : parent.width/2
+                            height: width
+                            source: model.decoration
+                            anchors.centerIn: parent
+                        }
+                    }
                 }
-
             }
         }
 
@@ -145,29 +150,32 @@ Item {
 
     // Área de drop para detectar cuando otro elemento se suelta aquí
     DropArea {
-        id: dropArea
         anchors.fill: parent
 
-        onEntered: {
-            // Visual feedback cuando un elemento entra en esta área
+        onEntered: function(drag) {
+            console.log("DropArea entered")
             dropHighlight.opacity = 0.3
         }
 
-        onExited: {
+        onExited: function(drag) {
+            console.log("DropArea exited")
             dropHighlight.opacity = 0
         }
 
         onDropped: function(drop) {
+            console.log("✓ DROPPED:", drop.source.name, "sobre", delegateRoot.name)
             dropHighlight.opacity = 0
-            // Emitir señal con los índices de ambos elementos
-            if (drop.source && drop.source.itemIndex !== itemIndex) {
-                delegateRoot.dropOnItem(
-                    drop.source.itemIndex,
-                    drop.source.itemModel,
-                    itemIndex,
-                    itemModel
-                )
-            }
+
+            delegateRoot.dropOnItem(
+                drop.itemIndex,
+                drop.source.name,
+            drop.source.iconSource,
+            drop.source.appIndex,
+            delegateRoot.itemIndex,
+            delegateRoot.name,
+            delegateRoot.iconSource,
+            delegateRoot.appIndex
+            )
         }
     }
 
@@ -189,56 +197,75 @@ Item {
     }
 
     MouseArea {
+        id: mouseArea
         anchors.fill: parent
+
         property bool changeGroup: false
+        property bool isDragging: false
+        property point startPos
+        property int dragThreshold: 10
 
-        // Para que Drag.source funcione
-        drag.target: dragContainer
+        // NO usar drag.target - manejamos el arrastre manualmente
 
-        QtObject {
-            id: origin
-            property int x
-            property int y
+        onPressed: function(mouse) {
+            startPos = Qt.point(mouse.x, mouse.y)
+            isDragging = false
         }
 
-        // Click sostenido para activar arrastre
-        onPressAndHold: {
-            if (pressed) {
-                dragContainer.Drag.active = true
-                dragContainer.Drag.source = delegateRoot
-                dragContainer.z = 9999
-                delegateRoot.dragActive = true
+        onPositionChanged: function(mouse) {
+            if (pressed && !isDragging) {
+                var dx = mouse.x - startPos.x
+                var dy = mouse.y - startPos.y
+                var distance = Math.sqrt(dx * dx + dy * dy)
+
+                if (distance > dragThreshold) {
+                    isDragging = true
+                    delegateRoot.dragActive = true
+                    dragContainer.z = 9999
+                    console.log("Drag started for:", delegateRoot.name)
+                }
+            }
+
+            if (isDragging) {
+                // Mover manualmente el dragContainer
+                dragContainer.x = mouse.x - startPos.x
+                dragContainer.y = mouse.y - startPos.y
             }
         }
 
-        // Guardar posición original al presionar
-        onPressed: {
-            origin.x = dragContainer.x
-            origin.y = dragContainer.y
-        }
+        onReleased: function(mouse) {
+            console.log("Mouse released, isDragging:", isDragging)
 
-        // Restaurar al soltar
-        onReleased: {
-            dragContainer.Drag.active = false
+            if (isDragging) {
+                // Finalizar el drag
+                dragContainer.Drag.drop()
 
-            if (!changeGroup) {
-                returnAnimation.start()
-            }
+                if (!changeGroup) {
+                    returnAnimation.start()
+                }
 
-            dragContainer.z = 0
-            delegateRoot.dragActive = false
-        }
-
-        // Click simple para abrir
-        onClicked: {
-            iconsAnamitaionInitialLoad = false
-            if (isGroup) {
-                openGroup(subModel)
-                //openFolder()
-            } else if (listGeneralActive) {
-                openGridApp(model.appIndex)
+                dragContainer.z = 0
+                delegateRoot.dragActive = false
+                isDragging = false
             } else {
-                rootModel.trigger(index, "", null)
+                // Click simple - abrir el ítem
+                iconsAnamitaionInitialLoad = false
+                if (isGroup) {
+                    openGroup(subModel)
+                } else if (listGeneralActive) {
+                    openGridApp(model.appIndex)
+                } else {
+                    rootModel.trigger(index, "", null)
+                }
+            }
+        }
+
+        onPressAndHold: function(mouse) {
+            if (!isDragging) {
+                isDragging = true
+                delegateRoot.dragActive = true
+                dragContainer.z = 9999
+                console.log("Drag started (press and hold):", delegateRoot.name)
             }
         }
     }
