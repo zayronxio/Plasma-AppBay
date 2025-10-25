@@ -14,6 +14,8 @@ PlasmoidItem {
 
   property bool activeGroup: false
 
+  property bool iconsAnamitaionInitialLoad: false
+
   property color bgColor: PlasmaCore.Theme.backgroundColor
 
   property var subModel: [

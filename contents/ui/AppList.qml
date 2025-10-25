@@ -44,7 +44,7 @@ FocusScope {
             anchors.fill: parent
             propagateComposedEvents: true
             onWheel: {
-                console.log("funciona")
+                iconsAnamitaionInitialLoad = true
                 if (wheel.angleDelta.y > 0 && currentPage > 0) {
                     currentPage--
                 } else if (wheel.angleDelta.y < 0 && currentPage < totalPages - 1) {
@@ -64,12 +64,24 @@ FocusScope {
             id: wrapper
             width: activeGroup ? (folderAppModel.count < maxItemsPerRow) ? folderAppModel.count*cellWidth : maxItemsPerRow*cellWidth : parent.width
             height: activeGroup ? ((Math.ceil(folderAppModel.count/maxItemsPerRow)) % maxItemsPerColumn)*cellHeight  : parent.height
-            Behavior on x {
-                NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
-            }
-            x: -currentPage * gridRoot.width
 
-            anchors.centerIn: parent
+            Behavior on anchors.leftMargin {
+                enabled: iconsAnamitaionInitialLoad
+                NumberAnimation {
+                    id: marginAnimation
+                    duration: 200
+                    easing.type: Easing.InOutQuad
+
+                    onRunningChanged: {
+                        if (!running) {
+                            iconsAnamitaionInitialLoad = false
+                        }
+                    }
+                }
+            }
+            anchors.left: parent.left
+            anchors.leftMargin: ((parent.width - width)/2) - currentPage * gridRoot.width
+            anchors.verticalCenter: parent.verticalCenter
 
             Rectangle {
                 width: !activeGroup ? 0 : parent.width

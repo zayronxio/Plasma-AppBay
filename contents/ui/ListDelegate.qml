@@ -231,6 +231,7 @@ Item {
 
         // Click simple para abrir
         onClicked: {
+            iconsAnamitaionInitialLoad = false
             if (isGroup) {
                 openGroup(subModel)
                 //openFolder()
