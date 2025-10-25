@@ -25,6 +25,7 @@ Item {
         id: background
         height: entryHeight
         width: 190
+        anchors.horizontalCenter: parent.horizontalCenter
         radius: entryHeight/2
         color: Qt.rgba(entryColor.r,entryColor.g,entryColor.b,entryOpacity)
         border.width: 1
@@ -52,8 +53,11 @@ Item {
             }
 
             onTextChanged: {
+                runnerModel.query = text;
                 if (text == ""){
                     searchActive = false
+                } else {
+                    listActive = "searchList"
                 }
             }
         }
