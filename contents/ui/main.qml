@@ -12,6 +12,30 @@ PlasmoidItem {
 
   property bool searchActive: false
 
+  property bool activeGroup: false
+
+  property color bgColor: PlasmaCore.Theme.backgroundColor
+
+  property var subModel: [
+    {
+      displayGrupName: "Mi Grupo",
+      indexInModel: 6,
+      isGroup: true,
+      elements: [
+        {
+          display: "Okular",
+          decoration: "okular",
+          appIndex: 28
+        },
+        {
+          display: "Firefox",
+          decoration: "firefox",
+          appIndex: 1
+        }
+      ]
+    }
+  ]
+
   property QtObject globalFavorites: rootModel.favoritesModel
 
   property string listActive: "generalList" // "searchList"
@@ -22,10 +46,19 @@ PlasmoidItem {
 
   Keys.onPressed: (event) => {
     if (event.key === Qt.Key_Escape) {
-      Module.ToggleActive.delateFullText()
-      searchActive = false
-      Module.ToggleActive.handleVisible()
-      event.accepted = true
+      if (activeGroup) {
+        activeGroup = false
+        event.accepted = true
+      } else if (searchActive) {
+        searchActive = false
+        event.accepted = true
+      } else {
+        Module.ToggleActive.delateFullText()
+        searchActive = false
+        Module.ToggleActive.handleVisible()
+        event.accepted = true
+      }
+
     }
     else if (event.key === Qt.Key_Backspace) {
       if (searchActive) {
@@ -52,35 +85,41 @@ PlasmoidItem {
   function generateModel() {
     if (!rootModel || rootModel.count === 0) {
       return
-    } else {
-      var applicationsModel = rootModel.modelForRow(0)
-      if (!applicationsModel) {
-        return
-      }
-
-      for (var appIndex = 0; appIndex < applicationsModel.count; appIndex++) {
-        var exist = false
-        var appIndexObj = applicationsModel.index(appIndex, 0)
-        var appName = applicationsModel.data(appIndexObj, Qt.DisplayRole)
-        var appIcon = applicationsModel.data(appIndexObj, Qt.DecorationRole)
-        for (var u = 0; u < appsModel.count; u++) {
-          if (appsModel.get(u).name === appName) {
-            exist = true
-          }
-        }
-        if (!exist) {
-          appsModel.append({
-            name: appName,
-            appIndex: appIndex,
-            icon: appIcon
-          })
-        }
-
-      }
     }
 
+    var applicationsModel = rootModel.modelForRow(0)
+    if (!applicationsModel) {
+      return
+    }
 
+    // 💡 Limpiamos el modelo antes de regenerarlo
+    appsModel.clear()
+
+    // --- Agregar todas las aplicaciones ---
+    for (var appIndex = 0; appIndex < applicationsModel.count; appIndex++) {
+      var appIndexObj = applicationsModel.index(appIndex, 0)
+      var appName = applicationsModel.data(appIndexObj, Qt.DisplayRole)
+      var appIcon = applicationsModel.data(appIndexObj, Qt.DecorationRole)
+
+      appsModel.append({
+        display: appName,
+        appIndex: appIndex,
+        isGroup: false,
+        decoration: appIcon
+      })
+    }
+
+    // --- Agregar los grupos personalizados ---
+    for (var u = 0; u < subModel.length; u++) {
+      var group = subModel[u]
+      appsModel.insert(group.indexInModel, {
+        display: group.displayGrupName,
+        isGroup: true,
+        modelGroup: group.elements
+      })
+    }
   }
+
 
   //BEGIN Models
   Kicker.RootModel {

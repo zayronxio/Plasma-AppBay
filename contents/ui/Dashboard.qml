@@ -14,8 +14,6 @@ Kicker.DashboardWindow {
     Rectangle {
         id: background
 
-        property color bgColor: PlasmaCore.Theme.backgroundColor
-
         anchors.fill: parent
         color: Qt.rgba(bgColor.r, bgColor.g, bgColor.b, 0.6)
         opacity: 0.0
@@ -56,14 +54,12 @@ Kicker.DashboardWindow {
         // AppList ocupando el resto del espacio
         AppList {
             id: appList
-            height: parent.height*.7
-            width:  parent.width*.8
+            height: parent.height*.8
+            width:  parent.width
             anchors {
                 top: searchEntry.bottom
-                bottom: parent.bottom
-                left: parent.left
-                right: parent.right
                 topMargin: 20
+                horizontalCenter: parent.horizontalCenter
             }
             //focus: true
             visible: true

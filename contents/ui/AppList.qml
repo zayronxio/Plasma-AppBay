@@ -9,7 +9,10 @@ FocusScope {
     property var searchModel: runnerModel.count > 0 ? runnerModel.modelForRow(0) : null
     property bool listGeneralActive: listActive === "generalList"
 
-    readonly property var modelActive: listGeneralActive ? mo : searchModel
+    readonly property var modelActive: activeGroup ? folderAppModel : listGeneralActive ? mo : searchModel
+    property var folderAppModel: null
+
+    property bool visibleApps: true
 
     signal openGridApp(int ID)
 
@@ -19,39 +22,72 @@ FocusScope {
     readonly property int cellWidth: 256
     readonly property int cellHeight: 256
     readonly property int iconSize: 96
-    readonly property int marginPage: (width - (cellWidth*maxItemsPerRow))/2
+    readonly property int marginPage: activeGroup ? 0 : (width - (cellWidth*maxItemsPerRow))/2
     readonly property int itemsPerPage: maxItemsPerRow * maxItemsPerColumn
 
     property int currentPage: 0
     property int totalPages
 
+    function handleCreateGroup(){
+
+    }
+
     Item {
         id: gridRoot
         width: parent.width
         height:  parent.height
+        //Visible: visibleApps
+
+        property var folderAppModel: null
 
         MouseArea {
             anchors.fill: parent
             propagateComposedEvents: true
             onWheel: {
+                console.log("funciona")
                 if (wheel.angleDelta.y > 0 && currentPage > 0) {
                     currentPage--
                 } else if (wheel.angleDelta.y < 0 && currentPage < totalPages - 1) {
+                    console.log("despues",currentPage)
                     currentPage++
+                    console.log("despues",currentPage)
                 }
                 wheel.accepted = true
+            }
+            onClicked: {
+                activeGroup = false
             }
         }
 
 
         Item {
             id: wrapper
-            width: parent.width
-            height:  parent.height
+            width: activeGroup ? (folderAppModel.count < maxItemsPerRow) ? folderAppModel.count*cellWidth : maxItemsPerRow*cellWidth : parent.width
+            height: activeGroup ? ((Math.ceil(folderAppModel.count/maxItemsPerRow)) % maxItemsPerColumn)*cellHeight  : parent.height
             Behavior on x {
-                NumberAnimation { duration: 350; easing.type: Easing.InOutQuad }
+                NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
             }
             x: -currentPage * gridRoot.width
+
+            anchors.centerIn: parent
+
+            Rectangle {
+                width: !activeGroup ? 0 : parent.width
+                height: !activeGroup ? 0 :parent.height
+                anchors.centerIn: parent
+                visible: activeGroup
+                color: Qt.rgba(bgColor.r, bgColor.g, bgColor.b, 0.7)
+                radius: 12
+                Behavior on width {
+                    NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+                }
+                Behavior on height {
+                    NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
+                }
+
+            }
+
+
 
             Repeater {
                 model: modelActive
@@ -73,12 +109,50 @@ FocusScope {
                         anchors.fill: parent
                         iconSource: model.icon || model.decoration
                         name: model.name || model.display
+                        isGroup: model.isGroup
+                        elementsVisible: visibleApps
                         dragActive: false
                         sizeIcon: iconSize
+                        subModel: model.modelGroup
+
+                        onDropOnItem: function(draggedIdx, draggedMdl, targetIdx, targetMdl) {
+                            handleCreateGroup(draggedIdx, draggedMdl, targetIdx, targetMdl)
+                        }
+
+                        onOpenGroup: function (model){
+                            folderAppModel = model
+                            activeGroup = true
+                        }
+
+
                     }
 
                     Component.onCompleted: {
+
                         totalPages = Math.ceil(index/(maxItemsPerRow*maxItemsPerColumn))
+                    }
+                }
+            }
+        }
+
+        PageIndicator {
+            id: pageIndicator
+            count: totalPages
+            currentIndex: currentPage
+            visible: totalPages > 1
+            anchors {
+                bottom: parent.bottom
+                topMargin: 10
+                horizontalCenter: parent.horizontalCenter
+            }
+
+            // Navegación por clic en los puntos
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    var clickedIndex = Math.floor(mouseX / (pageIndicator.width / pageIndicator.count))
+                    if (clickedIndex >= 0 && clickedIndex < pageIndicator.count) {
+                        currentPage = clickedIndex
                     }
                 }
             }

@@ -8,7 +8,7 @@ Item {
     property color entryColor: "white"
     property color entryTextColor: "black"
     property double entryOpacity: 0.7
-    property string placeholderText: "perros"
+    property string placeholderText: "Search"
     property alias text: searchText.text
 
     property bool activeCursor: false
