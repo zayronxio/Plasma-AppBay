@@ -28,8 +28,40 @@ FocusScope {
     property int currentPage: 0
     property int totalPages
 
-    function handleCreateGroup(){
+    function handleCreateGroup(index,item1,item2){
+        var newGroupName = "folder apps" + (subModel.length + 1) // nombre genérico
+        var newGroup = {
+            displayGrupName: newGroupName,
+            indexInModel: index,
+            isGroup: true,
+            elements: [
+                { display: item1.display, decoration: item1.decoration, appIndex: item1.appIndex },
+                { display: item2.display, decoration: item2.decoration, appIndex: item2.appIndex }
+            ]
+        }
+        subModel.push(newGroup)
 
+        function removeByAppIndex(appIndex) {
+            for (var i = 0; i < appsModel.count; i++) {
+                if (appsModel.get(i).appIndex === appIndex) {
+                    appsModel.remove(i, 1)
+                    break
+                }
+            }
+        }
+
+        removeByAppIndex(item1.appIndex)
+        removeByAppIndex(item2.appIndex)
+
+        appsModel.insert(index, {
+            display: newGroupName,
+            decoration: null,
+            isGroup: true,
+            modelGroup: [
+                { display: item1.display, decoration: item1.decoration, appIndex: item1.appIndex },
+                { display: item2.display, decoration: item2.decoration, appIndex: item2.appIndex }
+            ]
+        })
     }
 
     Item {
@@ -122,13 +154,26 @@ FocusScope {
                         iconSource: model.icon || model.decoration
                         name: model.name || model.display
                         isGroup: model.isGroup
+                        appIndex: model.appIndex
                         elementsVisible: visibleApps
                         dragActive: false
                         sizeIcon: iconSize
                         subModel: model.modelGroup
 
-                        onDropOnItem: function(draggedIdx, draggedMdl, targetIdx, targetMdl) {
-                            handleCreateGroup(draggedIdx, draggedMdl, targetIdx, targetMdl)
+                        onDropOnItem: function(
+                            draggedIndex,
+                            draggedName,
+                            draggedIcon,
+                            draggedAppIndex,
+                            targetIndex,
+                            targetName,
+                            targetIcon,
+                            targetAppIndex
+                        ) {
+                            var draggedItem = { display: draggedName, decoration: draggedIcon, appIndex: draggedAppIndex }
+                            var targetItem  = { display: targetName, decoration: targetIcon, appIndex: targetAppIndex }
+                            console.log("Empalmado:", draggedName, "→", targetName)
+                            handleCreateGroup(targetIndex,draggedItem,targetItem)
                         }
 
                         onOpenGroup: function (model){
