@@ -56,6 +56,7 @@ Item {
                 runnerModel.query = text;
                 if (text == ""){
                     searchActive = false
+                    listActive = "generalList"
                 } else {
                     searchActive = true
                     listActive = "searchList"
