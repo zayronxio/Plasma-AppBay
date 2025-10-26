@@ -42,47 +42,11 @@ PlasmoidItem {
 
   property string listActive: "generalList" // "searchList"
 
+  property var hiddenApps: []
+
   ListModel {
     id: appsModel
   }
-  /*/
-  Keys.onPressed: (event) => {
-    if (event.key === Qt.Key_Escape) {
-      if (activeGroup) {
-        activeGroup = false
-        event.accepted = true
-      } else if (searchActive) {
-        searchActive = false
-        event.accepted = true
-      } else {
-        Module.ToggleActive.delateFullText()
-        searchActive = false
-        Module.ToggleActive.handleVisible()
-        event.accepted = true
-      }
-
-    }
-    else if (event.key === Qt.Key_Backspace) {
-      if (searchActive) {
-        Module.ToggleActive.backspace()
-        event.accepted = true
-      }
-    }
-    else if (event.key === Qt.Key_Delete) {
-      if (searchActive) {
-        Module.ToggleActive.deleteKey()
-        event.accepted = true
-      }
-    }
-    else if (event.text !== "" && !event.ctrl && !event.alt && !event.meta) {
-      event.accepted = true;
-      searchActive = true
-      Module.ToggleActive.newTextSearch(event.text)
-    }
-    else {
-      event.accepted = false
-    }
-  }/*/
 
   function generateModel() {
     if (!rootModel || rootModel.count === 0) {

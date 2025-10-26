@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls 2.15
 import org.kde.kirigami as Kirigami
+import org.kde.plasma.extras as PlasmaExtras
 
 Item {
     id: delegateRoot
@@ -69,6 +70,10 @@ Item {
         }
     }
 
+    ContextMenu {
+        id: contextMenu
+    }
+
     Item {
         id: dragContainer
         width: parent.width
@@ -90,6 +95,7 @@ Item {
             height: sizeIcon
             color: Qt.rgba(bgColor.r, bgColor.g, bgColor.b, 0.7)
             anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
 
             Flow {
                 anchors.fill: parent
@@ -120,6 +126,7 @@ Item {
             height: width
             source: iconSource
             anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
 
             Behavior on width {
                 NumberAnimation {
@@ -129,14 +136,14 @@ Item {
             }
         }
 
-        Text {
+        Kirigami.Heading {
             anchors.top: icon.bottom
             anchors.horizontalCenter: parent.horizontalCenter
             text: name
             width: parent.width - 10
             elide: Text.ElideRight
             horizontalAlignment: Text.AlignHCenter
-            font.pixelSize: 12
+            level: 5
             opacity: dragActive ? 0 : 1
             visible: opacity > 0 && !isGroup
 
@@ -224,9 +231,18 @@ Item {
         property point startPos
         property int dragThreshold: 10
 
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+
         // NO usar drag.target - manejamos el arrastre manualmente
 
         onPressed: function(mouse) {
+            if (mouse.button === Qt.RightButton) {
+                contextMenu.open(mouse.x,mouse.y,model.appIndex)
+                //contextMenu.x = mouse.x
+                //contextMenu.y = mouse.y
+                mouse.accepted = true
+                return
+            }
             startPos = Qt.point(mouse.x, mouse.y)
             isDragging = false
         }
@@ -268,23 +284,28 @@ Item {
                 isDragging = false
             } else {
                 // Click simple - abrir el ítem
-                iconsAnamitaionInitialLoad = false
-                if (isGroup) {
-                    openGroup(subModel)
-                } else if (listGeneralActive) {
-                    openGridApp(model.appIndex)
-                } else {
-                    rootModel.trigger(index, "", null)
+                if (mouse.button === Qt.LeftButton){
+                    iconsAnamitaionInitialLoad = false
+                    if (isGroup) {
+                        openGroup(subModel)
+                    } else if (listGeneralActive) {
+                        openGridApp(model.appIndex)
+                    } else {
+                        rootModel.trigger(index, "", null)
+                    }
                 }
+
             }
         }
 
         onPressAndHold: function(mouse) {
-            if (!isDragging) {
-                isDragging = true
-                delegateRoot.dragActive = true
-                dragContainer.z = 9999
-                console.log("Drag started (press and hold):", delegateRoot.name)
+            if (mouse.button === Qt.LeftButton) {
+                if (!isDragging) {
+                    isDragging = true
+                    delegateRoot.dragActive = true
+                    dragContainer.z = 9999
+                    console.log("Drag started (press and hold):", delegateRoot.name)
+                }
             }
         }
     }
