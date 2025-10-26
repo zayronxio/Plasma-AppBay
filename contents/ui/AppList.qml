@@ -152,7 +152,7 @@ FocusScope {
                 }
             }
             anchors.left: parent.left
-            anchors.leftMargin: ((parent.width - width)/2) - currentPage * gridRoot.width
+            anchors.leftMargin: activeGroup ? ((parent.width - width)/2) : ((parent.width - width)/2) - currentPage * gridRoot.width
             anchors.verticalCenter: parent.verticalCenter
 
             Rectangle {
