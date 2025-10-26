@@ -57,6 +57,7 @@ Item {
                 if (text == ""){
                     searchActive = false
                 } else {
+                    searchActive = true
                     listActive = "searchList"
                 }
             }

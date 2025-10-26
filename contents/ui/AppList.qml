@@ -41,14 +41,6 @@ FocusScope {
         }
         subModel.push(newGroup)
 
-        function removeByAppIndex(appIndex) {
-            for (var i = 0; i < appsModel.count; i++) {
-                if (appsModel.get(i).appIndex === appIndex) {
-                    appsModel.remove(i, 1)
-                    break
-                }
-            }
-        }
 
         removeByAppIndex(item1.appIndex)
         removeByAppIndex(item2.appIndex)
@@ -62,6 +54,54 @@ FocusScope {
                 { display: item2.display, decoration: item2.decoration, appIndex: item2.appIndex }
             ]
         })
+    }
+
+    function removeByAppIndex(appIndex) {
+        for (var i = 0; i < appsModel.count; i++) {
+            if (appsModel.get(i).appIndex === appIndex) {
+                appsModel.remove(i, 1)
+                break
+            }
+        }
+    }
+
+    function toArray(listModel) {
+        var arr = []
+        if (!listModel)
+            return arr
+
+            // Si es un QQmlListModel, recorre sus elementos
+            if (listModel.count !== undefined) {
+                for (var i = 0; i < listModel.count; i++) {
+                    arr.push(listModel.get(i))
+                }
+            }
+            // Si ya es array, simplemente devuélvelo
+            else if (Array.isArray(listModel)) {
+                arr = listModel
+            }
+
+            return arr
+    }
+
+    function handleAddToGroup(targetIndex, draggedItem) {
+        var target = appsModel.get(targetIndex)
+        if (!target)
+            return
+
+            // Convertir a array real
+            var arrayModelGroup = toArray(target.modelGroup)
+
+            // Agregar nuevo elemento
+            arrayModelGroup.push({
+                display: draggedItem.display,
+                decoration: draggedItem.decoration,
+                appIndex: draggedItem.appIndex
+            })
+
+            // Reasignar al modelo (esto reemplaza el modelo interno)
+            appsModel.set(targetIndex, { modelGroup: arrayModelGroup })
+            removeByAppIndex(draggedItem.appIndex)
     }
 
     Item {
@@ -174,6 +214,22 @@ FocusScope {
                             var targetItem  = { display: targetName, decoration: targetIcon, appIndex: targetAppIndex }
                             console.log("Empalmado:", draggedName, "→", targetName)
                             handleCreateGroup(targetIndex,draggedItem,targetItem)
+                        }
+                        onDropOnItemGroup: function (
+                            draggedIndex,
+                            draggedName,
+                            draggedIcon,
+                            draggedAppIndex,
+                            targetIndex
+                        ) {
+                            var draggedItem = {
+                                display: draggedName,
+                                decoration: draggedIcon,
+                                appIndex: draggedAppIndex
+                            }
+
+                            console.log("Agregando", draggedName, "al grupo en índice", targetIndex)
+                            handleAddToGroup(targetIndex, draggedItem)
                         }
 
                         onOpenGroup: function (model){

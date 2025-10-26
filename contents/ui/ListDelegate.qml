@@ -28,6 +28,14 @@ Item {
         int targetAppIndex
     )
 
+    signal dropOnItemGroup(
+        int draggedIndex,
+        string draggedName,
+        string draggedIcon,
+        int draggedAppIndex,
+        int targetIndex
+    )
+
     signal openFolder
     signal closeFolder
     signal openGroup(var groupModel)
@@ -92,6 +100,7 @@ Item {
                     delegate: Item {
                         width: bgGroup.active ? 256 : sizeIcon/2
                         height: bgGroup.active ? 256 : sizeIcon/2
+                        visible: index < 4
                         Kirigami.Icon {
                             id: iconGroup
                             width: bgGroup.active ? sizeIcon : parent.width/2
@@ -165,17 +174,27 @@ Item {
         onDropped: function(drop) {
             console.log("✓ DROPPED:", drop.source.name, "sobre", delegateRoot.name)
             dropHighlight.opacity = 0
+            if (isGroup) {
+                delegateRoot.dropOnItemGroup(
+                    drop.itemIndex,
+                    drop.source.name,
+                    drop.source.iconSource,
+                    drop.source.appIndex,
+                    delegateRoot.itemIndex
+                )
+            } else {
+                delegateRoot.dropOnItem(
+                    drop.itemIndex,
+                    drop.source.name,
+                    drop.source.iconSource,
+                    drop.source.appIndex,
+                    delegateRoot.itemIndex,
+                    delegateRoot.name,
+                    delegateRoot.iconSource,
+                    delegateRoot.appIndex
+                )
+            }
 
-            delegateRoot.dropOnItem(
-                drop.itemIndex,
-                drop.source.name,
-            drop.source.iconSource,
-            drop.source.appIndex,
-            delegateRoot.itemIndex,
-            delegateRoot.name,
-            delegateRoot.iconSource,
-            delegateRoot.appIndex
-            )
         }
     }
 

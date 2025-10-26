@@ -45,7 +45,7 @@ PlasmoidItem {
   ListModel {
     id: appsModel
   }
-
+  /*/
   Keys.onPressed: (event) => {
     if (event.key === Qt.Key_Escape) {
       if (activeGroup) {
@@ -82,7 +82,7 @@ PlasmoidItem {
     else {
       event.accepted = false
     }
-  }
+  }/*/
 
   function generateModel() {
     if (!rootModel || rootModel.count === 0) {
@@ -175,7 +175,7 @@ PlasmoidItem {
 
 
   Component.onCompleted: {
-    forceActiveFocus()
-    rootModel.refresh()
+    //forceActiveFocus()
+      rootModel.refresh()
   }
 }
