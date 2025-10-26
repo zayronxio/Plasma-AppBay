@@ -16,6 +16,8 @@ Kicker.DashboardWindow {
         if (searchActive) {
             searchEntry.text = ""
             //listActive = "generalList"
+        } else if (activeGroup){
+            activeGroup = false
         } else {
             toggle()
         }

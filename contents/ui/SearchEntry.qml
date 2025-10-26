@@ -5,9 +5,9 @@ import org.kde.kirigami as Kirigami
 
 Item {
     property int entryHeight: 32
-    property color entryColor: "white"
-    property color entryTextColor: "black"
-    property double entryOpacity: 0.7
+    property color entryColor: bgColor
+    property color entryTextColor: Kirigami.Theme.textColor
+    property double entryOpacity: 0.6
     property string placeholderText: "Search"
     property alias text: searchText.text
 
