@@ -6,10 +6,20 @@ import org.kde.plasma.private.kicker 0.1 as Kicker
 Kicker.DashboardWindow {
     id: dashboard
 
-    visualParent: root
+    //visualParent: root
 
     backgroundColor: "transparent"
-    flags: Qt.Window | Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
+    //flags: Qt.Window | Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.ToolTip
+
+    onKeyEscapePressed: {
+        listActive = "generalList"
+        if (searchActive) {
+            searchEntry.text = ""
+            //listActive = "generalList"
+        } else {
+            toggle()
+        }
+    }
 
     Rectangle {
         id: background
