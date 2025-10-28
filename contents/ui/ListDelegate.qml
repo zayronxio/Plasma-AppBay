@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls 2.15
+import QtQuick.Effects
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.extras as PlasmaExtras
 
@@ -16,6 +17,10 @@ Item {
     property bool elementsVisible: true
     property bool isGroup
     property var subModel
+
+    property var parentItem
+
+    property bool full: false
 
     // Señal para notificar cuando se suelta sobre otro elemento
     signal dropOnItem(
@@ -41,8 +46,11 @@ Item {
     signal closeFolder
     signal openGroup(var groupModel)
 
+    signal removeAppInGroup(int index)
+
     // Efecto de aparición
     property real appearScale: 1.0
+
 
     transform: Scale {
         id: scaleEffect
@@ -52,6 +60,8 @@ Item {
         yScale: appearScale
     }
 
+
+
     SequentialAnimation {
         id: appearAnim
         PropertyAnimation {
@@ -59,7 +69,7 @@ Item {
             property: "appearScale"
             from: 0.0
             to: 1.0
-            duration: 180
+            duration: activeAnimations ? 150 : 0
             easing.type: Easing.OutQuad
         }
     }
@@ -73,6 +83,7 @@ Item {
     ContextMenu {
         id: contextMenu
     }
+
 
     Item {
         id: dragContainer
@@ -125,19 +136,31 @@ Item {
             width: dragActive ? sizeIcon + 16 : sizeIcon
             height: width
             source: iconSource
+            opacity: full ? 0 : 1
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
 
             Behavior on width {
                 NumberAnimation {
-                    duration: 200
+                    //enabled: activeAnimations
+                    duration: activeAnimations ? 200 : 0
                     easing.type: Easing.InOutQuad
                 }
             }
         }
+        MultiEffect {
+            source: icon
+            anchors.fill: icon
+            visible: full
+            shadowEnabled: true
+            shadowOpacity: 0.4
+
+        }
 
         Kirigami.Heading {
+            id: nameDisplay
             anchors.top: icon.bottom
+            anchors.topMargin: 16
             anchors.horizontalCenter: parent.horizontalCenter
             text: name
             width: parent.width - 10
@@ -145,7 +168,7 @@ Item {
             horizontalAlignment: Text.AlignHCenter
             level: 5
             opacity: dragActive ? 0 : 1
-            visible: opacity > 0 && !isGroup
+            visible: opacity > 0
 
             Behavior on opacity {
                 NumberAnimation {
@@ -155,12 +178,12 @@ Item {
             }
         }
 
-        opacity: dragActive ? 0.9 : 1.0
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 200
-                easing.type: Easing.InOutQuad
-            }
+        MultiEffect {
+            source: nameDisplay
+            anchors.fill: nameDisplay
+            visible: full
+            shadowEnabled: true
+            shadowOpacity: 0.4
         }
     }
 
@@ -169,39 +192,42 @@ Item {
         anchors.fill: parent
 
         onEntered: function(drag) {
-            console.log("DropArea entered")
             dropHighlight.opacity = 0.3
         }
 
         onExited: function(drag) {
-            console.log("DropArea exited")
             dropHighlight.opacity = 0
         }
 
-        onDropped: function(drop) {
-            console.log("✓ DROPPED:", drop.source.name, "sobre", delegateRoot.name)
+        onDropped: function(drop, drag) {
             dropHighlight.opacity = 0
-            if (isGroup) {
-                delegateRoot.dropOnItemGroup(
-                    drop.itemIndex,
-                    drop.source.name,
-                    drop.source.iconSource,
-                    drop.source.appIndex,
-                    delegateRoot.itemIndex
-                )
-            } else {
-                delegateRoot.dropOnItem(
-                    drop.itemIndex,
-                    drop.source.name,
-                    drop.source.iconSource,
-                    drop.source.appIndex,
-                    delegateRoot.itemIndex,
-                    delegateRoot.name,
-                    delegateRoot.iconSource,
-                    delegateRoot.appIndex
-                )
-            }
 
+            if (!activeGroup) {
+                if (!drop.source.isGroup) {
+                    if (isGroup) {
+                        delegateRoot.dropOnItemGroup(
+                            drop.itemIndex,
+                            drop.source.name,
+                            drop.source.iconSource,
+                            drop.source.appIndex,
+                            delegateRoot.itemIndex
+                        )
+                    } else {
+                        delegateRoot.dropOnItem(
+                            drop.itemIndex,
+                            drop.source.name,
+                            drop.source.iconSource,
+                            drop.source.appIndex,
+                            delegateRoot.itemIndex,
+                            delegateRoot.name,
+                            delegateRoot.iconSource,
+                            delegateRoot.appIndex
+                        )
+                    }
+                }
+            } else {
+                console.log("🟢 Elemento soltado dentro del grupo activo")
+            }
         }
     }
 
@@ -257,7 +283,6 @@ Item {
                     isDragging = true
                     delegateRoot.dragActive = true
                     dragContainer.z = 9999
-                    console.log("Drag started for:", delegateRoot.name)
                 }
             }
 
@@ -269,10 +294,22 @@ Item {
         }
 
         onReleased: function(mouse) {
-            console.log("Mouse released, isDragging:", isDragging)
-
             if (isDragging) {
-                // Finalizar el drag
+
+                if (activeGroup) {
+                    // logica para determinar donde se solto el icono
+                    var globalParentPos = parentItem.mapToGlobal(mouse.x, mouse.y)
+
+                    var realx = globalParentPos.x + parent.width*(model.index%maxItemsPerRow-1)
+
+                    var realY = mouse.y + dragContainer.height*((Math.floor(model.index/maxItemsPerRow)%maxItemsPerColumn))
+
+                    if ((realx > parentItem.width || realY > parentItem.height ) || (realx < 0 || realY < 0)) {
+                        console.log("el item fue arrastrado fuera del area de el grupo")
+                    }
+                }
+
+
                 dragContainer.Drag.drop()
 
                 if (!changeGroup) {
@@ -282,9 +319,9 @@ Item {
                 dragContainer.z = 0
                 delegateRoot.dragActive = false
                 isDragging = false
+
             } else {
-                // Click simple - abrir el ítem
-                if (mouse.button === Qt.LeftButton){
+                if (mouse.button === Qt.LeftButton) {
                     iconsAnamitaionInitialLoad = false
                     if (isGroup) {
                         openGroup(subModel)
@@ -294,9 +331,9 @@ Item {
                         rootModel.trigger(index, "", null)
                     }
                 }
-
             }
         }
+
 
         onPressAndHold: function(mouse) {
             if (mouse.button === Qt.LeftButton) {
@@ -304,7 +341,6 @@ Item {
                     isDragging = true
                     delegateRoot.dragActive = true
                     dragContainer.z = 9999
-                    console.log("Drag started (press and hold):", delegateRoot.name)
                 }
             }
         }

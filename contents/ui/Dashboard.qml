@@ -55,6 +55,7 @@ Kicker.DashboardWindow {
         SearchEntry {
             id: searchEntry
             //focus: true
+            height: 48
             anchors {
                 top: parent.top
                 horizontalCenter: parent.horizontalCenter
@@ -63,10 +64,17 @@ Kicker.DashboardWindow {
             width: Math.min(parent.width - 60, 400) // Ancho máximo
         }
 
+        PowerActions {
+            id: powerActions
+            anchors.verticalCenter: searchEntry.verticalCenter
+            anchors.right: parent.right
+            anchors.rightMargin: 16
+        }
+
         // AppList ocupando el resto del espacio
         AppList {
             id: appList
-            height: parent.height*.8
+            height: parent.height - searchEntry.height
             width:  parent.width
             anchors {
                 top: searchEntry.bottom
@@ -84,6 +92,16 @@ Kicker.DashboardWindow {
                     dashboard.visible = false
                 }
             }
+        }
+
+        FavorirtesDock {
+            id: favorirtesDock
+            sizeIconDock: 56
+            spacingMargin: 8
+            maxIconsInDock: 8
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 8
+            anchors.horizontalCenter: parent.horizontalCenter
         }
     }
 }

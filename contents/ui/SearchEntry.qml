@@ -26,6 +26,7 @@ Item {
         height: entryHeight
         width: 190
         anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
         radius: entryHeight/2
         color: Qt.rgba(entryColor.r,entryColor.g,entryColor.b,entryOpacity)
         border.width: 1
