@@ -10,15 +10,16 @@
         "Id": "Plasma.AppBay",
         "Description": "application launcher that replicates a macOS launchpad",
         "Category": "Utilities",
-        "Icon": "start-Here",
+        "Icon": "start-here-kde",
         "EnabledByDefault": true,
         "License": "GPL-3.0+",
         "ServiceTypes": [
             "Plasma/Applet"
         ],
-        "Version": "0.1",
+        "Version": "0.2",
         "Website": ""
     },
+    "X-Plasma-Provides": [ "org.kde.plasma.launchermenu" ],
     "X-Plasma-API-Minimum-Version": "6.0",
     "X-Plasma-MainScript": "ui/main.qml"
 }

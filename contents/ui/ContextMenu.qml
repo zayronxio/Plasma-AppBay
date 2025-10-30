@@ -1,7 +1,7 @@
 import QtQuick
 import org.kde.plasma.extras as PlasmaExtras
-import org.kde.plasma.private.kicker 0.1 as Kicker
 import "." as Module
+import "Utils.js" as Utils
 
 Item {
     id: root
@@ -9,7 +9,10 @@ Item {
     property QtObject menu: contextMenuComponent.createObject(root);
 
     property Item visualParent
+    property int indexInAppsModel
+    property bool isGruop
     property int appIndex  // El índice en el modelo original
+    property string currentName: ""  // Agregar esta propiedad
 
 
     function open(x, y, idx) {
@@ -46,18 +49,6 @@ Item {
         var appIndexObj = applicationsModel.index(appIndex, 0)
         var favoriteId = applicationsModel.data(appIndexObj, Kicker.UrlRole)
 
-        console.log("kicker UrlRole",applicationsModel.data(appIndexObj, Kicker.UrlRole))
-        console.log("Qt UrlRole",applicationsModel.data(appIndexObj, Qt.UrlRole))
-        console.log("UrlRole",applicationsModel.data(appIndexObj, "UrlRole"))
-        console.log("Url",applicationsModel.data(appIndexObj, "Url"))
-        console.log("url",applicationsModel.data(appIndexObj, "url"))
-        console.log("url",applicationsModel.data(appIndexObj, "url"))
-        console.log("FavoriteId",applicationsModel.data(appIndexObj, "FavoriteId"))
-        console.log("favoriteId",applicationsModel.data(appIndexObj, "favoriteId"))
-        console.log("favoriteid",applicationsModel.data(appIndexObj, "favoriteid"))
-        console.log("Kicker.FavoriteIdRole",applicationsModel.data(appIndexObj, Kicker.FavoriteIdRole))
-        console.log("Qt.FavoriteIdRole",applicationsModel.data(appIndexObj, Qt.FavoriteIdRole))
-
         if (favoriteId && favoriteId.length > 0) {
             console.log("Adding favorite from rootModel:", favoriteId)
             rootModel.favoritesModel.addFavorite(favoriteId)
@@ -66,6 +57,12 @@ Item {
         }
     }
 
+    /*/Kirigami.PromptDialog {
+        id: renameDialog
+        title: "Rename Group"
+
+
+    }/*/
 
     Component {
         id: contextMenuComponent
@@ -75,7 +72,8 @@ Item {
 
             PlasmaExtras.MenuItem {
                 text: "Hidden App"
-                icon: "configure"
+                icon: "view-hidden-symbolic"
+                visible: !isGruop
                 onClicked: {
                     hiddeApp()
                 }
@@ -84,8 +82,27 @@ Item {
             PlasmaExtras.MenuItem {
                 text: "Add to Favorites"
                 icon: "favorite"
+                visible: !isGruop
                 onClicked: {
                     addToFavorites()
+                }
+            }
+            PlasmaExtras.MenuItem {
+                text: "Rename Group"
+                icon: "entry-edit-symbolic"
+                visible: isGruop
+                onClicked: {
+                    nameActiveGroup = currentName
+                    activeIndex = indexInAppsModel
+                    rename.open()
+                }
+            }
+            PlasmaExtras.MenuItem {
+                text: "Delate Group"
+                icon: "remove-symbolic"
+                visible: isGruop
+                onClicked: {
+                    Module.ToggleActive.delateGroup(indexInAppsModel)
                 }
             }
         }

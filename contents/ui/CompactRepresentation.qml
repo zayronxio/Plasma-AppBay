@@ -35,8 +35,7 @@ Item {
     || plasmoid.location == PlasmaCore.Types.BottomEdge
     || plasmoid.location == PlasmaCore.Types.LeftEdge)
     readonly property bool vertical: (plasmoid.formFactor == PlasmaCore.Types.Vertical)
-    readonly property bool useCustomButtonImage: false //(plasmoid.configuration.useCustomButtonImage
-    //&& plasmoid.configuration.customButtonImage.length != 0)
+    readonly property bool useCustomButtonImage: (plasmoid.configuration.useCustomButtonImage && plasmoid.configuration.customButtonImage.length != 0)
 
     readonly property Component dashWindowComponent: Qt.createComponent(Qt.resolvedUrl("./Dashboard.qml"), root)
     readonly property Kicker.DashboardWindow dashWindow: dashWindowComponent && dashWindowComponent.status === Component.Ready
@@ -74,7 +73,7 @@ Item {
         readonly property double aspectRatio: (vertical ? implicitHeight / implicitWidth
         : implicitWidth / implicitHeight)
 
-        source: "start-here-kde" //Plasmoid.configuration.icon //useCustomButtonImage ? plasmoid.configuration.customButtonImage : plasmoid.configuration.icon
+        source: useCustomButtonImage ? Plasmoid.configuration.customButtonImage : Plasmoid.configuration.icon
 
         active: mouseArea.containsMouse
 

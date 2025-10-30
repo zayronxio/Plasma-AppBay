@@ -6,7 +6,32 @@
   <kcfgfile name=""/>
 
   <group name="General">
+    <entry name="icon" type="String">
+      <default>start-here-kde</default>
+    </entry>
+    <entry name="useCustomButtonImage" type="Bool">
+      <default>false</default>
+    </entry>
+    <entry name="customButtonImage" type="Url">
+      <default></default>
+    </entry>
 
+    <entry name="dockF" type="bool">
+      <default>true</default>
+    </entry>
+    <entry name="cellSize" type="Int">
+      <default>256</default>
+    </entry>
+    <entry name="iconSize" type="Int">
+      <default>96</default>
+    </entry>
+
+    <entry name="enabledShadow" type="Bool">
+      <default>true</default>
+    </entry>
+    <entry name="hiddenApps" type="StringList">
+      <default></default>
+    </entry>
   </group>
 
 </kcfg>

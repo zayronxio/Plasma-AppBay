@@ -1,5 +1,9 @@
 import QtQuick
+import "Utils.js" as Utils
 import QtQuick.Controls 2.15
+import org.kde.plasma.plasmoid
+import org.kde.kirigami as Kirigami
+import org.kde.iconthemes as KIconThemes
 
 FocusScope {
     id: rootScope
@@ -10,24 +14,28 @@ FocusScope {
     property bool listGeneralActive: listActive === "generalList"
 
     readonly property var modelActive: activeGroup ? folderAppModel : listGeneralActive ? mo : searchModel
-    property var folderAppModel: null
 
     property bool visibleApps: true
 
     signal openGridApp(int ID)
 
+
     // Configuración de la cuadrícula
     readonly property int maxItemsPerRow: Math.floor((width*.8)/cellWidth)
     readonly property int maxItemsPerColumn: Math.floor((height - cellHeight)/cellHeight)
-    readonly property int cellWidth: 256
-    readonly property int cellHeight: 256
-    readonly property int iconSize: 96
+    readonly property int cellWidth: Plasmoid.configuration.cellSize
+    readonly property int cellHeight: Plasmoid.configuration.cellSize
+    readonly property int iconSize: Plasmoid.configuration.iconSize
     readonly property int marginPage: activeGroup ? 0 : (width - (cellWidth*maxItemsPerRow))/2
     readonly property int itemsPerPage: maxItemsPerRow * maxItemsPerColumn
 
     property int currentPage: 0
     property int totalItems: 0
     readonly property int totalPages: Math.ceil(totalItems/(maxItemsPerRow*maxItemsPerColumn))
+
+    property string nameActiveGroup
+    property int activeIndex
+
 
     function handleCreateGroup(index, item1, item2) {
         var groupIndex = subModel ? subModel.length + 1 : 1
@@ -47,8 +55,8 @@ FocusScope {
         subModel.push(newGroup)
         saveSubModel()
 
-        removeByAppIndex(item1.appIndex)
-        removeByAppIndex(item2.appIndex)
+        Utils.removeByAppIndex(item1.appIndex)
+        Utils.removeByAppIndex(item2.appIndex)
 
         // Crear array JS puro para modelGroup
         var groupArray = [
@@ -79,61 +87,19 @@ FocusScope {
 
 
 
-    function removeByAppIndex(appIndex) {
-        for (var i = 0; i < appsModel.count; i++) {
-            if (appsModel.get(i).appIndex === appIndex) {
-                appsModel.remove(i, 1)
-                break
-            }
-        }
-    }
 
-    function toArray(listModel) {
-        var arr = []
-        if (!listModel)
-            return arr
 
-            // Si es un QQmlListModel, recorre sus elementos
-            if (listModel.count !== undefined) {
-                for (var i = 0; i < listModel.count; i++) {
-                    arr.push(listModel.get(i))
-                }
-            }
-            // Si ya es array, simplemente devuélvelo
-            else if (Array.isArray(listModel)) {
-                arr = listModel
-            }
 
-            return arr
-    }
-
-    function cloneToPureArray(array) {
-        var result = []
-        for (var i = 0; i < array.length; i++) {
-            var item = array[i]
-            result.push({
-                display: item.display,
-                decoration: item.decoration,
-                appIndex: item.appIndex
-            })
-        }
-        return result
-    }
 
     function handleAddToGroup(targetIndex, draggedItem) {
-        console.log("🔹 handleAddToGroup llamado con targetIndex:", targetIndex)
-        console.log("🔹 draggedItem:", JSON.stringify(draggedItem))
 
         var target = appsModel.get(targetIndex)
         if (!target) {
-            console.log("⚠️ No se encontró el target en appsModel para targetIndex:", targetIndex)
             return
         }
 
         // Convertir a array real si es necesario
-        var arrayModelGroup = toArray(target.modelGroup)
-
-        console.log("📦 arrayModelGroup ANTES de push:", JSON.stringify(arrayModelGroup, null, 2))
+        var arrayModelGroup = Utils.toArray(target.modelGroup)
 
         arrayModelGroup.push({
             display: draggedItem.display,
@@ -141,13 +107,11 @@ FocusScope {
             appIndex: draggedItem.appIndex
         })
 
-        console.log("✅ arrayModelGroup DESPUÉS de push:", JSON.stringify(arrayModelGroup, null, 2))
 
         // ⚡ Actualizar subModel también
         for (var i = 0; i < subModel.length; i++) {
             if (subModel[i].displayGrupName === target.display) {
-                console.log("🔄 Actualizando subModel en índice", i, "para grupo", target.display,  JSON.stringify(arrayModelGroup) )
-                subModel[i].elements = cloneToPureArray(arrayModelGroup)
+                subModel[i].elements = Utils.cloneToPureArray(arrayModelGroup)
                 break
             }
         }
@@ -158,25 +122,50 @@ FocusScope {
             display: target.display,
             isGroup: true
         })
-        console.log("💾 appsModel actualizado en índice:", targetIndex)
 
         saveSubModel()
-        console.log("💾 subModel guardado")
 
-        removeByAppIndex(draggedItem.appIndex)
-        console.log("🗑️ Eliminado elemento original con appIndex:", draggedItem.appIndex)
-
-        console.log("✅ handleAddToGroup completado correctamente")
+        Utils.removeByAppIndex(draggedItem.appIndex)
     }
 
+    Kirigami.PromptDialog {
+        id: rename
+        title: "Rename Group"
+        subtitle: "Enter a new name for this group"
+        standardButtons: Kirigami.Dialog.Ok | Kirigami.Dialog.Cancel
+        preferredWidth: 320
+        //preferredHeight: 188
+
+        TextField {
+            id: nameField
+            width: parent.width
+            height: 48
+            horizontalAlignment: Text.AlignHCenter
+            placeholderText: nameActiveGroup
+            anchors.horizontalCenter: parent.horizontalCenter
+            //leftPadding: 28 // Espacio fijo para el icono
+            focus: true
+            selectByMouse: true // Permitir selección de texto con mouse
+
+            background: Rectangle {
+                color: entryDialogColor
+                radius: height/2
+                opacity: 0.3
+            }
+        }
+        onAccepted: {
+            if (nameField.text.trim() !== "") {
+                nameActiveGroup = nameField.text.trim()
+                Utils.renameGroup(activeIndex, nameActiveGroup)
+            }
+        }
+    }
 
     Item {
         id: gridRoot
         width: parent.width
         height:  parent.height
         //Visible: visibleApps
-
-        property var folderAppModel: null
 
         MouseArea {
             anchors.fill: parent
@@ -277,7 +266,6 @@ FocusScope {
                         ) {
                             var draggedItem = { display: draggedName, decoration: draggedIcon, appIndex: draggedAppIndex }
                             var targetItem  = { display: targetName, decoration: targetIcon, appIndex: targetAppIndex }
-                            console.log("Empalmado:", draggedName, "→", targetName)
                             handleCreateGroup(targetIndex,draggedItem,targetItem)
                         }
                         onDropOnItemGroup: function (
@@ -293,18 +281,21 @@ FocusScope {
                                 appIndex: draggedAppIndex
                             }
 
-                            console.log("Agregando", draggedName, "al grupo en índice", targetIndex)
                             handleAddToGroup(targetIndex, draggedItem)
                         }
 
-                        onOpenGroup: function (model){
+                        onOpenGroup: function (model,indexGroup){
                             folderAppModel = model
+                            parentGroupIndex = indexGroup
                             activeGroup = true
+                        }
+                        onRemoveAppInGroup: function (idx,nme) {
+                            Utils.removeAppOfGroup(idx, nme)
                         }
                     }
 
                     Component.onCompleted: {
-                        totalItems = index
+                        totalItems = totalItems < model.index ? model.index : totalItems
                     }
                 }
             }

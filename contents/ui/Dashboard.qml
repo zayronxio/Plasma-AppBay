@@ -1,6 +1,7 @@
 import QtQuick
 import org.kde.plasma.core as PlasmaCore
 import org.kde.kwindowsystem 1.0
+import org.kde.plasma.plasmoid
 import org.kde.plasma.private.kicker 0.1 as Kicker
 
 Kicker.DashboardWindow {
@@ -98,6 +99,7 @@ Kicker.DashboardWindow {
             id: favorirtesDock
             sizeIconDock: 56
             spacingMargin: 8
+            visible: Plasmoid.configuration.dockF
             maxIconsInDock: 8
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 8

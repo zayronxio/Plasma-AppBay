@@ -1,5 +1,4 @@
 import QtQuick
-import "." as Module
 import QtQuick.Controls
 import org.kde.kirigami as Kirigami
 
@@ -95,31 +94,6 @@ Item {
             }
         }
 
-        Component.onCompleted: {
-            searchText.forceActiveFocus()
-            // Conectar la señal para recibir texto desde el PlasmoidItem
-            Module.ToggleActive.newTextSearch.connect(function(str) {
-                searchText.text += str
-                searchText.forceActiveFocus()
-            })
-
-            // Conectar backspace
-            Module.ToggleActive.backspace.connect(function() {
-                if (searchText.text.length > 0) {
-                    searchText.text = searchText.text.slice(0, -1)
-                    searchText.forceActiveFocus()
-                }
-            })
-
-            Module.ToggleActive.delateFullText.connect(function() {
-                searchText.text = ""
-            })
-
-            // Conectar delete (suprimir)
-            Module.ToggleActive.deleteKey.connect(function() {
-                handleDeleteKey()
-            })
-        }
     }
 
     function clearText() {

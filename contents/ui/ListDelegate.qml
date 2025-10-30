@@ -1,8 +1,9 @@
 import QtQuick
 import QtQuick.Controls 2.15
 import QtQuick.Effects
+import org.kde.plasma.plasmoid
+import Qt5Compat.GraphicalEffects
 import org.kde.kirigami as Kirigami
-import org.kde.plasma.extras as PlasmaExtras
 
 Item {
     id: delegateRoot
@@ -44,9 +45,9 @@ Item {
 
     signal openFolder
     signal closeFolder
-    signal openGroup(var groupModel)
+    signal openGroup(var groupModel, int indexGroup)
 
-    signal removeAppInGroup(int index)
+    signal removeAppInGroup(int index, string value)
 
     // Efecto de aparición
     property real appearScale: 1.0
@@ -82,6 +83,9 @@ Item {
 
     ContextMenu {
         id: contextMenu
+        indexInAppsModel: model.index
+        currentName: model.display
+        isGruop: model.isGroup
     }
 
 
@@ -130,60 +134,62 @@ Item {
             }
         }
 
-        Kirigami.Icon {
-            id: icon
-            visible: !isGroup
-            width: dragActive ? sizeIcon + 16 : sizeIcon
-            height: width
-            source: iconSource
-            opacity: full ? 0 : 1
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
 
-            Behavior on width {
-                NumberAnimation {
-                    //enabled: activeAnimations
-                    duration: activeAnimations ? 200 : 0
-                    easing.type: Easing.InOutQuad
+        Item {
+            id: itemEffect
+            anchors.fill: parent
+
+            Kirigami.Icon {
+                id: icon
+                visible: !isGroup
+                width: dragActive ? sizeIcon + 16 : sizeIcon
+                height: width
+                source: iconSource
+                opacity: full ? 0 : 1
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.verticalCenter: parent.verticalCenter
+
+                Behavior on width {
+                    NumberAnimation {
+                        //enabled: activeAnimations
+                        duration: activeAnimations ? 200 : 0
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+            }
+
+            Kirigami.Heading {
+                id: nameDisplay
+                anchors.top: icon.bottom
+                anchors.topMargin: 16
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: name
+                width: parent.width - 10
+                elide: Text.ElideRight
+                horizontalAlignment: Text.AlignHCenter
+                level: 5
+                opacity: dragActive ? 0 : 1
+                visible: opacity > 0
+
+                Behavior on opacity {
+                    NumberAnimation {
+                        duration: 200
+                        easing.type: Easing.InOutQuad
+                    }
                 }
             }
         }
-        MultiEffect {
-            source: icon
-            anchors.fill: icon
-            visible: full
-            shadowEnabled: true
-            shadowOpacity: 0.4
 
-        }
-
-        Kirigami.Heading {
-            id: nameDisplay
-            anchors.top: icon.bottom
-            anchors.topMargin: 16
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: name
-            width: parent.width - 10
-            elide: Text.ElideRight
-            horizontalAlignment: Text.AlignHCenter
-            level: 5
-            opacity: dragActive ? 0 : 1
-            visible: opacity > 0
-
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: 200
-                    easing.type: Easing.InOutQuad
-                }
-            }
-        }
 
         MultiEffect {
-            source: nameDisplay
-            anchors.fill: nameDisplay
-            visible: full
-            shadowEnabled: true
-            shadowOpacity: 0.4
+            source: itemEffect
+            anchors.fill: itemEffect
+            //visible: false
+            shadowScale:  1.1
+            shadowEnabled: Plasmoid.configuration.enabledShadow
+            blurMultiplier: 3
+            blurMax: 18
+            shadowOpacity: 0.2
         }
     }
 
@@ -305,7 +311,8 @@ Item {
                     var realY = mouse.y + dragContainer.height*((Math.floor(model.index/maxItemsPerRow)%maxItemsPerColumn))
 
                     if ((realx > parentItem.width || realY > parentItem.height ) || (realx < 0 || realY < 0)) {
-                        console.log("el item fue arrastrado fuera del area de el grupo")
+
+                        removeAppInGroup(parentGroupIndex,model.display) // envia señal para procesar la eliminacion de los datos
                     }
                 }
 
@@ -324,7 +331,7 @@ Item {
                 if (mouse.button === Qt.LeftButton) {
                     iconsAnamitaionInitialLoad = false
                     if (isGroup) {
-                        openGroup(subModel)
+                        openGroup(subModel,model.index)
                     } else if (listGeneralActive) {
                         openGridApp(model.appIndex)
                     } else {

@@ -1,8 +1,10 @@
 import QtQuick
 import QtCore
+import QtQuick.Dialogs
 import org.kde.plasma.plasmoid
 import org.kde.plasma.private.kicker 0.1 as Kicker
 import org.kde.plasma.core as PlasmaCore
+import "Utils.js" as Utils
 import "." as Module
 
 PlasmoidItem {
@@ -14,15 +16,25 @@ PlasmoidItem {
   property bool activeAnimations: true
   property bool searchActive: false
   property bool activeGroup: false
+  property var folderAppModel: null
+  property int parentGroupIndex
   property bool iconsAnamitaionInitialLoad: false
   property color bgColor: PlasmaCore.Theme.backgroundColor
+  property color entryDialogColor: PlasmaCore.Theme.textColor
   property var subModel: []
   property var hiddenApps: []
   property QtObject globalFavorites: rootModel.favoritesModel
   property string listActive: "generalList" // "searchList"
 
+  property var hiddenAppsConfigs: Plasmoid.configuration.hiddenApps
+
+
   ListModel {
     id: appsModel
+  }
+
+  ListModel {
+    id: groupTemporalModel
   }
 
   Settings {
@@ -31,6 +43,13 @@ PlasmoidItem {
     property var configHiddenApps: []
     property var configSubModelJson: []
   }
+
+  onHiddenAppsConfigsChanged: {
+    Utils.findHiddenMissingApps(hiddenAppsConfigs, hiddenApps)
+    appBaySettings.configHiddenApps = hiddenAppsConfigs
+    hiddenApps = hiddenAppsConfigs
+  }
+
 
   function saveSubModel() {
     appBaySettings.setValue("configSubModelJson",JSON.stringify(subModel))
@@ -170,9 +189,14 @@ PlasmoidItem {
   fullRepresentation: compactRepresentation
 
   Component.onCompleted: {
+
     //forceActiveFocus()
     Module.ToggleActive.hiddenAppSignal.connect(saveHiddenApps)
+    Module.ToggleActive.delateGroup.connect(function(index) {
+      Utils.removeGroup(index)
+    })
     loadSettings()
+    Plasmoid.configuration.hiddenApps = hiddenApps
     rootModel.refresh()
   }
 }
