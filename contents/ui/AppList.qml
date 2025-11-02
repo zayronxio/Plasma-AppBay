@@ -36,6 +36,9 @@ FocusScope {
     property string nameActiveGroup
     property int activeIndex
 
+    onModelActiveChanged: {
+        totalItems = 0
+    }
 
     function handleCreateGroup(index, item1, item2) {
         var groupIndex = subModel ? subModel.length + 1 : 1
@@ -301,7 +304,8 @@ FocusScope {
                     }
 
                     Component.onCompleted: {
-                        totalItems = totalItems < model.index ? model.index : totalItems
+                        // ahora el conteo de los Items Activos es mas exacto
+                        totalItems = listGeneralActive ? totalItems < model.index ? model.index : totalItems : model.index
                     }
                 }
             }
