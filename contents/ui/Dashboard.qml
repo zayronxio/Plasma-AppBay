@@ -70,6 +70,7 @@ Kicker.DashboardWindow {
             anchors.verticalCenter: searchEntry.verticalCenter
             anchors.right: parent.right
             anchors.rightMargin: 16
+            visible: Plasmoid.configuration.systemActionsButtons
         }
 
         // AppList ocupando el resto del espacio

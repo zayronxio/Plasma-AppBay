@@ -32,6 +32,9 @@
     <entry name="hiddenApps" type="StringList">
       <default></default>
     </entry>
+    <entry name="systemActionsButtons" type="Bool">
+      <default>true</default>
+    </entry>
   </group>
 
 </kcfg>

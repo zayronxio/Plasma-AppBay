@@ -51,6 +51,7 @@ KCM.SimpleKCM {
     property alias cfg_iconSize: gridAndIcon.iconSize
     property alias cfg_enabledShadow: enabledShadow.checked
     property alias cfg_hiddenApps: hiddenList.apps
+    property alias cfg_systemActionsButtons: systemActionsButtons.checked
 
     QtObject {
         id: gridAndIcon
@@ -175,6 +176,10 @@ KCM.SimpleKCM {
         CheckBox {
             id: enabledShadow
             Kirigami.FormData.label: i18n("Enabled Shadown")
+        }
+        CheckBox {
+            id: systemActionsButtons
+            Kirigami.FormData.label: i18n("Enabled System Actions")
         }
         Kirigami.Separator {
             Kirigami.FormData.isSection: true
