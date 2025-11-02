@@ -180,7 +180,13 @@ FocusScope {
                 wheel.accepted = true
             }
             onClicked: {
-                activeGroup = false
+                if (activeGroup) {
+                    activeGroup = false
+                } else {
+                    // cuando se da click fuera del area de los iconos se cerrara el menu
+                    dashboard.toggle()
+                }
+
             }
         }
 
