@@ -85,7 +85,7 @@ Item {
         id: contextMenu
         indexInAppsModel: model.index
         currentName: model.display
-        isGruop: model.isGroup
+        isGruop: isGroup
     }
 
 
@@ -335,7 +335,15 @@ Item {
                     } else if (listGeneralActive) {
                         openGridApp(model.appIndex)
                     } else {
-                        rootModel.trigger(index, "", null)
+                        var appGeneralModel = rootModel.modelForRow(0)
+                        for (var g = 0; g < appGeneralModel.count; g++) {
+                            var appIndexObj = appGeneralModel.index(g, 0)
+                            var appName = appGeneralModel.data(appIndexObj, Qt.DisplayRole)
+                            if (model.display === appName) {
+                                openGridApp(g)
+                                break;
+                            }
+                        }
                     }
                 }
             }
