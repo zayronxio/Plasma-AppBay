@@ -18,8 +18,9 @@ Kicker.DashboardWindow {
             searchEntry.text = ""
             //listActive = "generalList"
         } else if (activeGroup){
-            currentPage = oldPage
+            //currentPage = oldPage
             activeGroup = false
+            currentPage = oldPage
         } else {
             toggle()
         }
