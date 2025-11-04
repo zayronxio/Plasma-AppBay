@@ -185,9 +185,9 @@ Item {
             source: itemEffect
             anchors.fill: itemEffect
             //visible: false
-            shadowScale:  1.1
+            //shadowScale:  1.1
             shadowEnabled: Plasmoid.configuration.enabledShadow
-            blurMultiplier: 3
+            blurMultiplier: 2
             blurMax: 18
             shadowOpacity: 0.2
         }
