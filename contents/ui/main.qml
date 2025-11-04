@@ -26,6 +26,8 @@ PlasmoidItem {
   property QtObject globalFavorites: rootModel.favoritesModel
   property string listActive: "generalList" // "searchList"
 
+  property int oldPage
+
   property var hiddenAppsConfigs: Plasmoid.configuration.hiddenApps
 
 
@@ -108,10 +110,12 @@ PlasmoidItem {
 
     // Agregar todas las aplicaciones que NO estén en subModel ni hiddenApps
     for (var appIndex = 0; appIndex < applicationsModel.count; appIndex++) {
+
       var appIndexObj = applicationsModel.index(appIndex, 0)
       var appName = applicationsModel.data(appIndexObj, Qt.DisplayRole)
       var appIcon = applicationsModel.data(appIndexObj, Qt.DecorationRole)
-      var favId = applicationsModel.data(appIndexObj, "favoriteId")
+      var favId = applicationsModel.data(appIndexObj, "storageId")
+
 
       if (isAppHidden(appName, appIndex)) {
         continue

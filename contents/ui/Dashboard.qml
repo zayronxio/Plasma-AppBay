@@ -18,6 +18,7 @@ Kicker.DashboardWindow {
             searchEntry.text = ""
             //listActive = "generalList"
         } else if (activeGroup){
+            currentPage = oldPage
             activeGroup = false
         } else {
             toggle()
@@ -98,9 +99,9 @@ Kicker.DashboardWindow {
 
         FavorirtesDock {
             id: favorirtesDock
-            sizeIconDock: 56
+            sizeIconDock: 64
             spacingMargin: 8
-            visible: Plasmoid.configuration.dockF
+            visible: Plasmoid.configuration.dockF && !activeGroup
             maxIconsInDock: 8
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 8

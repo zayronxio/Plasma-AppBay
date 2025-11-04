@@ -23,10 +23,13 @@ FocusScope {
     // Configuración de la cuadrícula
     readonly property int maxItemsPerRow: Math.floor((width*.8)/cellWidth)
     readonly property int maxItemsPerColumn: Math.floor((height - cellHeight)/cellHeight)
+
+    property real horizonBar: (Math.ceil(folderAppModel.count/maxItemsPerRow) < 3 ? Math.ceil(folderAppModel.count/maxItemsPerRow) :3)
+
     readonly property int cellWidth: Plasmoid.configuration.cellSize
     readonly property int cellHeight: Plasmoid.configuration.cellSize
     readonly property int iconSize: Plasmoid.configuration.iconSize
-    readonly property int marginPage: activeGroup ? 0 : (width - (cellWidth*maxItemsPerRow))/2
+    readonly property int marginPage: /*/activeGroup ? 0 :/*/ (width - (cellWidth*maxItemsPerRow))/2
     readonly property int itemsPerPage: maxItemsPerRow * maxItemsPerColumn
 
     property int currentPage: 0
@@ -35,6 +38,8 @@ FocusScope {
 
     property string nameActiveGroup
     property int activeIndex
+
+    property int marginMinimalGroup: activeGroup ? folderAppModel.count < maxItemsPerRow ? ((maxItemsPerRow - folderAppModel.count)*cellWidth)/2 : 0 : 0
 
     onModelActiveChanged: {
         totalItems = 0
@@ -185,6 +190,7 @@ FocusScope {
             onClicked: {
                 if (activeGroup) {
                     activeGroup = false
+                    currentPage = oldPage
                 } else {
                     // cuando se da click fuera del area de los iconos se cerrara el menu
                     dashboard.toggle()
@@ -197,7 +203,10 @@ FocusScope {
         Item {
             id: wrapper
             width: activeGroup ? (folderAppModel.count < maxItemsPerRow) ? folderAppModel.count*cellWidth : maxItemsPerRow*cellWidth : parent.width
-            height: activeGroup ? ((Math.ceil(folderAppModel.count/maxItemsPerRow)) % maxItemsPerColumn)*cellHeight  : parent.height
+
+            height: activeGroup ? horizonBar*cellHeight : parent.height
+
+            property int marginFirstPageGroup: activeGroup ? (gridRoot.width-width)/2 : 0
 
             Behavior on anchors.leftMargin {
                 enabled: iconsAnamitaionInitialLoad
@@ -213,15 +222,18 @@ FocusScope {
                     }
                 }
             }
+
             anchors.left: parent.left
-            anchors.leftMargin: activeGroup ? ((parent.width - width)/2) : ((parent.width - width)/2) - currentPage * gridRoot.width
+            anchors.leftMargin: ((parent.width - width)/2) - currentPage * gridRoot.width - marginFirstPageGroup + marginMinimalGroup //activeGroup ? ((parent.width - width)/2) : ((parent.width - width)/2) - currentPage * gridRoot.width
             anchors.verticalCenter: parent.verticalCenter
 
             Rectangle {
                 id: bgGroup
                 width: !activeGroup ? 0 : parent.width
                 height: !activeGroup ? 0 :parent.height
-                anchors.centerIn: parent
+                anchors.left: parent.left
+                anchors.leftMargin: (gridRoot.width-width)/2 + (parent.width*currentPage) + (gridRoot.width-parent.width)*currentPage - marginMinimalGroup
+                anchors.verticalCenter: parent.verticalCenter
                 visible: activeGroup
                 color: Qt.rgba(bgColor.r, bgColor.g, bgColor.b, 0.7)
                 radius: 12
@@ -294,6 +306,7 @@ FocusScope {
                         }
 
                         onOpenGroup: function (model,indexGroup){
+                            oldPage = currentPage
                             folderAppModel = model
                             parentGroupIndex = indexGroup
                             activeGroup = true
@@ -317,7 +330,7 @@ FocusScope {
             currentIndex: currentPage
             visible: totalPages > 1
             anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.top
+            anchors.top: wrapper.top
             anchors.topMargin: cellHeight*maxItemsPerColumn + 16
 
 
