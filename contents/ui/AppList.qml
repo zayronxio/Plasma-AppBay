@@ -268,8 +268,8 @@ FocusScope {
                         anchors.fill: parent
                         iconSource: model.icon || model.decoration
                         name: model.name || model.display
-                        isGroup: model.isGroup
-                        appIndex: model.appIndex
+                        isGroup: model.isGroup !== undefined ? model.isGroup : false
+                        appIndex: model.appIndex !== undefined ? model.appIndex : -1
                         elementsVisible: visibleApps
                         dragActive: false
                         sizeIcon: iconSize
