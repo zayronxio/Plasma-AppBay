@@ -27,6 +27,7 @@ PlasmoidItem {
   property string listActive: "generalList" // "searchList"
 
   property int oldPage
+  property int currentPage: 0
 
   property var hiddenAppsConfigs: Plasmoid.configuration.hiddenApps
 

@@ -32,7 +32,7 @@ FocusScope {
     readonly property int marginPage: /*/activeGroup ? 0 :/*/ (width - (cellWidth*maxItemsPerRow))/2
     readonly property int itemsPerPage: maxItemsPerRow * maxItemsPerColumn
 
-    property int currentPage: 0
+
     property int totalItems: 0
     readonly property int totalPages: Math.ceil(totalItems/(maxItemsPerRow*maxItemsPerColumn))
 
@@ -306,10 +306,13 @@ FocusScope {
                         }
 
                         onOpenGroup: function (model,indexGroup){
-                            oldPage = currentPage
+
                             folderAppModel = model
                             parentGroupIndex = indexGroup
+                            oldPage = currentPage
+                            currentPage = 0
                             activeGroup = true
+
                         }
                         onRemoveAppInGroup: function (idx,nme) {
                             Utils.removeAppOfGroup(idx, nme)
