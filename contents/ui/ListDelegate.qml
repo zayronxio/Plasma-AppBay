@@ -43,6 +43,8 @@ Item {
         int targetIndex
     )
 
+    signal relocateGroup(int draggedIndex, int targetIndex)
+
     signal openFolder
     signal closeFolder
     signal openGroup(var groupModel, int indexGroup)
@@ -230,6 +232,8 @@ Item {
                             delegateRoot.appIndex
                         )
                     }
+                } else {
+                    delegateRoot.relocateGroup(drop.source.itemIndex,delegateRoot.itemIndex)
                 }
             } else {
                 console.log("🟢 Elemento soltado dentro del grupo activo")

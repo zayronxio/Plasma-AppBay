@@ -314,6 +314,24 @@ FocusScope {
                             activeGroup = true
 
                         }
+                        onRelocateGroup: function (orignalIndex,idx) {
+                            console.log(idx,orignalIndex)
+                            var item = appsModel.get(orignalIndex)
+
+                            appsModel.insert(idx,item)
+
+                            var indexRemove = 0
+
+                            if (orignalIndex > idx) {
+                                indexRemove = orignalIndex + 1
+                            } else {
+                                 indexRemove = orignalIndex
+                            }
+                            appsModel.remove(indexRemove)
+
+                            Utils.relocateGroup(idx)
+
+                        }
                         onRemoveAppInGroup: function (idx,nme) {
                             Utils.removeAppOfGroup(idx, nme)
                         }

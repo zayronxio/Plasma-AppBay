@@ -203,3 +203,13 @@ function renameGroup(index,newName) {
     appsModel.set(index, { "display": newName })
 
 }
+
+function relocateGroup(index) {
+    for (var i = 0; i < subModel.length; i++) {
+        if (subModel[i].displayGrupName === appsModel.get(index).display) {
+            subModel[i].indexInModel = index
+            saveSubModel()
+            break
+        }
+    }
+}
