@@ -1,12 +1,14 @@
 import QtQuick
+import QtQuick.Effects
 import QtQuick.Controls
+import Qt5Compat.GraphicalEffects
 import org.kde.kirigami as Kirigami
 
 Item {
     property int entryHeight: 32
     property color entryColor: bgColor
     property color entryTextColor: Kirigami.Theme.textColor
-    property double entryOpacity: 0.6
+    property double entryOpacity: 0.3
     property string placeholderText: "Search"
     property alias text: searchText.text
 
@@ -18,6 +20,15 @@ Item {
         let b = color.b * 255;
         let luminance = 0.299 * r + 0.587 * g + 0.114 * b;
         return luminance > 127.5;
+    }
+
+    Keys.onPressed: (event) => {
+        if (event.text !== "" && !event.ctrl && !event.alt && !event.meta) {
+            event.accepted = true;
+            searchActive = true
+            searchText.text = event.text
+            searchText.focus = true
+        }
     }
 
     Rectangle {
@@ -64,6 +75,7 @@ Item {
             }
         }
 
+
         // Placeholder personalizado cuando no hay texto
         Item {
             id: placeholder
@@ -96,33 +108,36 @@ Item {
 
     }
 
-    function clearText() {
-        searchText.text = ""
-        searchText.forceActiveFocus()
+    Item {
+        id: mask
+        width: background.width + 16
+        height: background.height + 16
+        anchors.centerIn: background
+        visible:  false
+        Rectangle {
+            color: "black"
+            width: background.width
+            height: background.height
+            anchors.centerIn: parent
+            radius: background.radius
+        }
     }
 
-    function setText(text) {
-        searchText.text = text
-        searchText.forceActiveFocus()
-    }
-
-    function handleDeleteKey() {
-        if (searchText.text.length > 0) {
-            // Si hay texto seleccionado, eliminar la selección
-            if (searchText.selectedText.length > 0) {
-                var start = searchText.selectionStart
-                var end = searchText.selectionEnd
-                searchText.text = searchText.text.substring(0, start) + searchText.text.substring(end)
-                searchText.select(start, start) // Mover cursor al inicio de la selección
-            } else {
-                // Si no hay selección, eliminar el carácter en la posición del cursor
-                var cursorPos = searchText.cursorPosition
-                if (cursorPos < searchText.text.length) {
-                    searchText.text = searchText.text.substring(0, cursorPos) + searchText.text.substring(cursorPos + 1)
-                    searchText.cursorPosition = cursorPos
-                }
-            }
-            searchText.forceActiveFocus()
+    MultiEffect {
+        source: mask
+        anchors.fill: mask
+        //visible: false
+        //shadowScale:  1.1
+        shadowEnabled: true //Plasmoid.configuration.enabledShadow
+        //blurMultiplier: 2
+        blurMax: 22
+        shadowHorizontalOffset: 0
+        shadowVerticalOffset: 2
+        shadowOpacity: 0.2
+        layer.enabled: true
+        layer.effect: OpacityMask {
+            invert: true
+            maskSource: mask
         }
     }
 }
