@@ -79,75 +79,154 @@ PlasmoidItem {
   }
 
   function generateModel() {
-    if (!rootModel || rootModel.count === 0) {
+    if (!rootModel || rootModel.count === 0)
       return
-    }
 
-    var applicationsModel = rootModel.modelForRow(0)
-    if (!applicationsModel) {
-      return
-    }
+      var applicationsModel = rootModel.modelForRow(0)
+      if (!applicationsModel)
+        return
 
-    // Limpiamos el modelo antes de regenerarlo
-    appsModel.clear()
+        appsModel.clear()
 
-    // Función de ayuda: verifica si appName está en algún grupo o en hiddenApps
-    function isAppHidden(appName, appIndex) {
-      // Verificar hiddenApps por nombre
-      if (hiddenApps.indexOf(appName) !== -1) {
-        return true
-      }
-      // Verificar subModel por appIndex
-      for (var u = 0; u < subModel.length; u++) {
-        var group = subModel[u]
-        for (var e = 0; e < group.elements.length; e++) {
-          if (group.elements[e].appIndex === appIndex) {
-            return true
+        /* ==============================
+         * 1️⃣ Crear mapas de apps actuales
+         * ============================== */
+
+        var appMapByName = {}
+        var appMapByStorageId = {}
+
+        for (var i = 0; i < applicationsModel.count; i++) {
+          var idx = applicationsModel.index(i, 0)
+          var name = applicationsModel.data(idx, Qt.DisplayRole)
+          var icon = applicationsModel.data(idx, Qt.DecorationRole)
+          var storageId = applicationsModel.data(idx, "storageId")
+
+          var appData = {
+            appIndex: i,
+            display: name,
+            decoration: icon,
+            favoriteId: storageId
           }
+
+          appMapByName[name] = appData
+
+          if (storageId)
+            appMapByStorageId[storageId] = appData
         }
-      }
-      return false
-    }
 
-    // Agregar todas las aplicaciones que NO estén en subModel ni hiddenApps
-    for (var appIndex = 0; appIndex < applicationsModel.count; appIndex++) {
+        /* ==================================
+         * 2️⃣ Resolver app desde configuración
+         * ================================== */
 
-      var appIndexObj = applicationsModel.index(appIndex, 0)
-      var appName = applicationsModel.data(appIndexObj, Qt.DisplayRole)
-      var appIcon = applicationsModel.data(appIndexObj, Qt.DecorationRole)
-      var favId = applicationsModel.data(appIndexObj, "storageId")
+        function resolveApp(element) {
+          // Prioridad 1: storageId
+          if (element.favoriteId &&
+            appMapByStorageId[element.favoriteId]) {
+            return appMapByStorageId[element.favoriteId]
+            }
 
+            // Prioridad 2: nombre visible
+            if (appMapByName[element.display]) {
+              return appMapByName[element.display]
+            }
 
-      if (isAppHidden(appName, appIndex)) {
-        continue
-      }
+            // Fallback: appIndex antiguo
+            if (element.appIndex !== undefined &&
+              element.appIndex < applicationsModel.count) {
 
-      appsModel.append({
-        display: appName,
-        appIndex: appIndex,
-        isGroup: false,
-        favoriteId: favId,
-        decoration: appIcon
-      })
-    }
+              var idx = applicationsModel.index(element.appIndex, 0)
+              var name = applicationsModel.data(idx, Qt.DisplayRole)
 
-    // Agregar los grupos personalizados
-    for (var u = 0; u < subModel.length; u++) {
-      var group = subModel[u]
+              if (name === element.display) {
+                return {
+                  appIndex: element.appIndex,
+                  display: name,
+                  decoration: applicationsModel.data(idx, Qt.DecorationRole),
+                  favoriteId: applicationsModel.data(idx, "storageId")
+                }
+              }
+              }
 
-      // Comprobación: si el índice es mayor al tamaño actual del modelo, ajustarlo
-      var insertIndex = group.indexInModel
-      if (insertIndex > appsModel.count) {
-        insertIndex = appsModel.count
-      }
+              return null
+        }
 
-      appsModel.insert(insertIndex, {
-        display: group.displayGrupName,
-        isGroup: true,
-        modelGroup: group.elements
-      })
-    }
+        /* =========================================
+         * 3️⃣ Verificar si una app está oculta/grupo
+         * ========================================= */
+
+        function isAppHidden(appName, appIndex) {
+          // hiddenApps por nombre
+          if (hiddenApps.indexOf(appName) !== -1)
+            return true
+
+            // grupos
+            for (var g = 0; g < subModel.length; g++) {
+              var group = subModel[g]
+              for (var e = 0; e < group.elements.length; e++) {
+                var el = group.elements[e]
+                if (el.display === appName)
+                  return true
+              }
+            }
+            return false
+        }
+
+        /* ==============================
+         * 4️⃣ Apps normales (no agrupadas)
+         * ============================== */
+
+        for (var a = 0; a < applicationsModel.count; a++) {
+          var idx = applicationsModel.index(a, 0)
+          var name = applicationsModel.data(idx, Qt.DisplayRole)
+
+          if (isAppHidden(name, a))
+            continue
+
+            appsModel.append({
+              display: name,
+              appIndex: a,
+              isGroup: false,
+              favoriteId: applicationsModel.data(idx, "storageId"),
+                             decoration: applicationsModel.data(idx, Qt.DecorationRole)
+            })
+        }
+
+        /* ==========================
+         * 5️⃣ Insertar grupos
+         * ========================== */
+
+        for (var u = 0; u < subModel.length; u++) {
+          var group = subModel[u]
+          var resolvedElements = []
+
+          for (var e = 0; e < group.elements.length; e++) {
+            var resolved = resolveApp(group.elements[e])
+            if (resolved) {
+              resolvedElements.push({
+                display: resolved.display,
+                decoration: resolved.decoration,
+                appIndex: resolved.appIndex,
+                favoriteId: resolved.favoriteId
+              })
+            }
+          }
+
+          // No insertar grupos vacíos
+          if (resolvedElements.length === 0)
+            continue
+
+            var insertIndex = group.indexInModel
+            if (insertIndex > appsModel.count)
+              insertIndex = appsModel.count
+
+              appsModel.insert(insertIndex, {
+                display: group.displayGrupName,
+                isGroup: true,
+                modelGroup: resolvedElements
+              })
+        }
   }
+
 
 
   // BEGIN Models
@@ -194,8 +273,6 @@ PlasmoidItem {
   fullRepresentation: compactRepresentation
 
   Component.onCompleted: {
-
-    //forceActiveFocus()
     Module.ToggleActive.hiddenAppSignal.connect(saveHiddenApps)
     Module.ToggleActive.delateGroup.connect(function(index) {
       Utils.removeGroup(index)

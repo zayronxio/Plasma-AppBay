@@ -76,34 +76,31 @@ function findHiddenMissingApps(stringList, array) {
     }
 }
 
-function addAppAppModel(appName){
+function addAppAppModel(appName) {
     var applicationsModel = rootModel.modelForRow(0)
-    for (var j = 0; j < applicationsModel.count; j++) {
+    if (!applicationsModel)
+        return
 
-        var appIndexObj = applicationsModel.index(j, 0)
-        var nameInModel = applicationsModel.data(appIndexObj, Qt.DisplayRole)
-        if (nameInModel === appName) {
-            if (j < appsModel.count) {
-                appsModel.insert(j, {
+        for (var j = 0; j < applicationsModel.count; j++) {
+            var idx = applicationsModel.index(j, 0)
+            var nameInModel = applicationsModel.data(idx, Qt.DisplayRole)
+
+            if (nameInModel === appName) {
+
+                // Insertar al final de las apps normales
+                appsModel.append({
                     display: nameInModel,
                     appIndex: j,
-                    decoration: applicationsModel.data(appIndexObj, Qt.DecorationRole),
-                    isGroup: false,
-                    favoriteId: ""
+                    decoration: applicationsModel.data(idx, Qt.DecorationRole),
+                                 isGroup: false,
+                                 favoriteId: applicationsModel.data(idx, "storageId")
                 })
-            } else {
-                appsModel.insert(j, {
-                    display: nameInModel,
-                    appIndex: j,
-                    decoration: applicationsModel.data(appIndexObj, Qt.DecorationRole),
-                    isGroup: false,
-                    favoriteId: ""
-                })
+
+                return
             }
-            break;
         }
-    }
 }
+
 
 function removeGroup(index) {
     // el index debe ser en funcion de appsModel
