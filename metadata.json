@@ -16,7 +16,7 @@
         "ServiceTypes": [
             "Plasma/Applet"
         ],
-        "Version": "0.2",
+        "Version": "0.2.6",
         "Website": ""
     },
     "X-Plasma-Provides": [ "org.kde.plasma.launchermenu" ],
